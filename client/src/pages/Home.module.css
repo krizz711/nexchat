@@ -1,0 +1,47 @@
+.layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.main {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text3);
+}
+
+.welcomeInner {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.welcomeLogo {
+  font-family: var(--mono);
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--accent);
+  opacity: 0.3;
+  letter-spacing: -2px;
+}
+
+.welcomeInner p { font-size: 14px; }
+.hint { font-size: 12px; opacity: 0.6; }
+
+.privateWrap {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 200;
+}
