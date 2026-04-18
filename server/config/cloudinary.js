@@ -9,25 +9,24 @@ cloudinary.config({
 });
 
 const storage = new CloudinaryStorage({
-  cloudinary,
-  params: (req, file) => {
-    return {
-      folder: 'chat-app',
-      resource_type: 'auto',
-      use_filename: true,
-      unique_filename: true,
-    };
+  cloudinary: cloudinary,
+  params: {
+    folder: 'chat-app',
+    resource_type: 'auto',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'txt', 'zip'],
   },
 });
 
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowed = ['image/jpeg','image/png','image/gif','image/webp',
-                     'application/pdf','text/plain','application/zip'];
+    const allowed = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf', 'text/plain', 'application/zip',
+    ];
     if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error('File type not allowed'), false);
+    else cb(new Error(`File type not allowed: ${file.mimetype}`), false);
   },
 });
 
