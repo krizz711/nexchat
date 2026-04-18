@@ -16,6 +16,17 @@ const sanitize = (str) => {
   return str.replace(/<[^>]*>/g, '').trim().slice(0, 2000);
 };
 
+const safeParseUser = (raw) => {
+  if (!raw) return null;
+  if (typeof raw !== 'string') return raw;
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
 module.exports = (io) => {
   // Track typing timeouts
   const typingTimeouts = new Map();
@@ -144,7 +155,11 @@ module.exports = (io) => {
       if (!recipientRaw) {
         return socket.emit('private:error', { error: 'User is offline' });
       }
-      const recipient = typeof recipientRaw === 'string' ? JSON.parse(recipientRaw) : recipientRaw;
+      const recipient = safeParseUser(recipientRaw);
+      if (!recipient || !recipient.socketId) {
+        await redis.hdel('online_users', toUserId);
+        return socket.emit('private:error', { error: 'User is offline' });
+      }
 
       const message = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -170,9 +185,25 @@ module.exports = (io) => {
     // ─── GET ONLINE USERS ────────────────────────────────────────
     socket.on('users:online', async () => {
       const all = await redis.hgetall('online_users');
-      const users = all ? Object.values(all).map(u =>
-        typeof u === 'string' ? JSON.parse(u) : u
-      ) : [];
+      const users = [];
+
+      if (all) {
+        const invalidKeys = [];
+
+        Object.entries(all).forEach(([key, value]) => {
+          const parsed = safeParseUser(value);
+          if (parsed && parsed.id && parsed.socketId) {
+            users.push(parsed);
+            return;
+          }
+          invalidKeys.push(key);
+        });
+
+        if (invalidKeys.length) {
+          await Promise.all(invalidKeys.map(key => redis.hdel('online_users', key)));
+        }
+      }
+
       socket.emit('users:list', users);
     });
 

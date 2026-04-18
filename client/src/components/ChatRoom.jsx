@@ -126,20 +126,29 @@ export default function ChatRoom({ room }) {
                   {msg.type === 'file' && (
                     <div className={styles.fileMsg}>
                       {isImage(msg.fileType) ? (
-                        <img src={msg.fileUrl} alt={msg.fileName}
+                        <img
+                          src={msg.fileUrl}
+                          alt={msg.fileName}
                           className={styles.imageMsg}
-                          onClick={() => window.open(msg.fileUrl, '_blank')} />
+                          onClick={() => window.open(msg.fileUrl, '_blank')}
+                        />
                       ) : (
                         <div className={styles.fileCard}>
-                          <div className={styles.fileIcon}>📎</div>
+                          <div className={styles.fileIcon}>
+                            {msg.fileType === 'application/pdf' ? '📄' : '📎'}
+                          </div>
                           <div>
                             <div className={styles.fileName}>{msg.fileName}</div>
-                            {msg.fileSize && <div className={styles.fileSize}>{fmtSize(msg.fileSize)}</div>}
+                            {msg.fileSize && (
+                              <div className={styles.fileSize}>{fmtSize(msg.fileSize)}</div>
+                            )}
                           </div>
                         </div>
                       )}
-                      <button className={styles.dlBtn}
-                        onClick={() => downloadFile(msg.fileUrl, msg.fileName)}>
+                      <button
+                        className={styles.dlBtn}
+                        onClick={() => downloadFile(msg.fileUrl, msg.fileName, msg.fileType)}
+                      >
                         ↓ Download
                       </button>
                     </div>

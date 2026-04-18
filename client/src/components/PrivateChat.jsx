@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { uploadFile } from '../utils/api';
-import { downloadChatTxt } from '../utils/download';
+import { downloadChatTxt, downloadFile } from '../utils/download';
 import { format } from 'date-fns';
 import styles from './PrivateChat.module.css';
 
@@ -69,8 +69,8 @@ export default function PrivateChat({ targetUser, messages, onSend, onSendFile, 
               <div className={`${styles.bubble} ${isMine ? styles.bubbleMine : styles.bubbleOther}`}>
                 {msg.type === 'file' ? (
                   isImage(msg.fileType)
-                    ? <img src={msg.fileUrl} alt={msg.fileName} className={styles.img} onClick={() => window.open(msg.fileUrl, '_blank')} />
-                    : <div className={styles.file}>📎 {msg.fileName} <a href={msg.fileUrl} target="_blank" rel="noreferrer">↓</a></div>
+                    ? <img src={msg.fileUrl} alt={msg.fileName} className={styles.img} onClick={() => downloadFile(msg.fileUrl, msg.fileName, msg.fileType)} />
+                    : <div className={styles.file}>📎 {msg.fileName} <button type="button" onClick={() => downloadFile(msg.fileUrl, msg.fileName, msg.fileType)}>Open</button> <button type="button" onClick={() => downloadFile(msg.fileUrl, msg.fileName, msg.fileType)}>↓</button></div>
                 ) : (
                   <span>{msg.text}</span>
                 )}
