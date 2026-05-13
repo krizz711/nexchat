@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getSocket } from '../socket';
 import { usePrivateChat } from '../hooks/usePrivateChat';
@@ -10,6 +11,7 @@ import styles from './Home.module.css';
 
 export default function Home() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeRoom, setActiveRoom] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [starringUserId, setStarringUserId] = useState('');
@@ -58,6 +60,10 @@ export default function Home() {
     openChat(u.id);
   };
 
+  const handleViewProfile = (u) => {
+    navigate(`/profile?user=${u.id}`);
+  };
+
   const handleUserStar = async (targetUserId) => {
     if (!targetUserId || starringUserId) return;
     setStarringUserId(targetUserId);
@@ -95,7 +101,7 @@ export default function Home() {
 
       <main className={styles.main}>
         {activeRoom ? (
-          <ChatRoom key={activeRoom.id} room={activeRoom} />
+          <ChatRoom key={activeRoom.id} room={activeRoom} onUserClick={handleUserClick} />
         ) : (
           <div className={styles.welcome}>
             <div className={styles.welcomeInner}>
@@ -118,6 +124,7 @@ export default function Home() {
             onClose={closeChat}
             onStarUser={handleUserStar}
             starringUserId={starringUserId}
+            onViewProfile={handleViewProfile}
           />
         </div>
       )}

@@ -277,4 +277,26 @@ router.post('/avatar', authMiddleware, upload.single('avatar'), async (req, res)
   }
 });
 
+// Get public user profile by ID
+router.get('/users/:userId', async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) return res.status(400).json({ error: 'User ID required' });
+
+  try {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, username, email, avatar_url, bio, created_at')
+      .eq('id', userId)
+      .single();
+
+    if (error || !user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

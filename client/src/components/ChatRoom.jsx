@@ -6,7 +6,7 @@ import { downloadChatTxt, downloadChatZip, downloadFile } from '../utils/downloa
 import { format } from 'date-fns';
 import styles from './ChatRoom.module.css';
 
-export default function ChatRoom({ room }) {
+export default function ChatRoom({ room, onUserClick }) {
   const { user } = useAuth();
   const { messages, typingUsers, onlineCount, sendMessage, sendFile, sendTypingStart, sendTypingStop } = useChat(room.id);
   const [text, setText] = useState('');
@@ -111,7 +111,9 @@ export default function ChatRoom({ room }) {
             <div key={msg.id} className={`${styles.msgRow} ${isMine ? styles.mine : ''} fade-in`}>
               {!isMine && (
                 <div className={styles.avatarCol} style={{ visibility: showAvatar ? 'visible' : 'hidden' }}>
-                  <div className="avatar" style={{ width: 32, height: 32, fontSize: 12 }}>
+                  <div className="avatar" style={{ width: 32, height: 32, fontSize: 12, cursor: 'pointer' }}
+                    onClick={() => onUserClick?.(msg.sender)}
+                    title="Click to message">
                     {msg.sender.avatar_url
                       ? <img src={msg.sender.avatar_url} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
                       : msg.sender.username?.slice(0, 2).toUpperCase()}
@@ -121,7 +123,9 @@ export default function ChatRoom({ room }) {
 
               <div className={styles.msgContent}>
                 {showAvatar && !isMine && (
-                  <div className={styles.senderName}>{msg.sender.username}</div>
+                  <div className={styles.senderName} onClick={() => onUserClick?.(msg.sender)} style={{ cursor: 'pointer', textDecoration: 'underline' }} title="Click to message">
+                    {msg.sender.username}
+                  </div>
                 )}
 
                 {msg.replyTo && (

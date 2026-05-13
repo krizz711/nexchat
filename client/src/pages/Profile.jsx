@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { updateProfile, uploadAvatar } from '../utils/api';
 import styles from './Profile.module.css';
@@ -7,6 +7,25 @@ import styles from './Profile.module.css';
 export default function Profile() {
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [viewingUser, setViewingUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Check if viewing another user
+  useEffect(() => {
+    const userId = searchParams.get('user');
+    if (userId) {
+      setLoading(true);
+      fetch(`/api/auth/users/${userId}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) setViewingUser(data.user);
+          else setViewingUser(null);
+        })
+        .catch(() => setViewingUser(null))
+        .finally(() => setLoading(false));
+    }
+  }, [searchParams]);
 
   // Guest user check
   if (user?.isGuest) {
@@ -40,6 +59,62 @@ export default function Profile() {
   const [error, setError] = useState('');
   const fileRef = useRef(null);
 
+  const initials = (name) => name?.slice(0, 2).toUpperCase() || '??';
+
+  // Show loading while fetching other user
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.card}>
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text2)' }}>Loading profile...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Viewing another user's profile
+  if (viewingUser) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.card}>
+          <button className={styles.back} onClick={() => navigate(-1)}>← Back</button>
+
+          <h1 className={styles.title}>{viewingUser.username}'s Profile</h1>
+
+          {/* Avatar */}
+          <div className={styles.avatarSection}>
+            <div className={styles.avatarWrap}>
+              <div className={styles.avatarBig}>
+                {viewingUser.avatar_url
+                  ? <img src={viewingUser.avatar_url} alt={viewingUser.username} />
+                  : initials(viewingUser.username)}
+              </div>
+            </div>
+            <div className={styles.identity}>
+              <h2>{viewingUser.username}</h2>
+              <p>{viewingUser.bio || 'No bio yet.'}</p>
+            </div>
+          </div>
+
+          {/* Info */}
+          <div className={styles.info}>
+            <div className={styles.infoRow}>
+              <span>Member since</span>
+              <span>{new Date(viewingUser.created_at).toLocaleDateString()}</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+            <button className="btn btn-primary" onClick={() => navigate('/')}>
+              Go back to chat
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const handle = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   const save = async () => {
@@ -65,7 +140,16 @@ export default function Profile() {
     finally { setUploading(false); fileRef.current.value = ''; }
   };
 
-  const initials = (name) => name?.slice(0, 2).toUpperCase() || '??';
+  // Own profile check - show loading if fetching other user
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.card}>
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text2)' }}>Loading profile...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>
