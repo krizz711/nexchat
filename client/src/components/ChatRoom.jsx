@@ -46,6 +46,14 @@ export default function ChatRoom({ room }) {
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (room.is_global) {
+      if ((file.type.startsWith('image/') && file.type !== 'image/gif') || file.type.startsWith('video/')) {
+        alert('Images and videos are not allowed in global rooms. Only GIFs are permitted.');
+        fileRef.current.value = '';
+        return;
+      }
+    }
     setUploading(true); setUploadProgress(0);
     try {
       const data = await uploadFile(file, p => setUploadProgress(p));
@@ -55,7 +63,7 @@ export default function ChatRoom({ room }) {
   };
 
   const isImage = (type) => type?.startsWith('image/');
-  const fmtSize = (bytes) => bytes > 1024*1024 ? `${(bytes/1024/1024).toFixed(1)}MB` : `${(bytes/1024).toFixed(0)}KB`;
+  const fmtSize = (bytes) => bytes > 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)}MB` : `${(bytes / 1024).toFixed(0)}KB`;
 
   return (
     <div className={styles.room}>
@@ -69,7 +77,7 @@ export default function ChatRoom({ room }) {
           <div className={styles.downloadWrap}>
             <button className={styles.iconBtn} onClick={() => setShowDownload(!showDownload)} title="Download">
               <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
               </svg>
             </button>
             {showDownload && (
@@ -97,16 +105,16 @@ export default function ChatRoom({ room }) {
 
         {messages.map((msg, i) => {
           const isMine = msg.sender.id === user.id;
-          const showAvatar = i === 0 || messages[i-1]?.sender.id !== msg.sender.id;
+          const showAvatar = i === 0 || messages[i - 1]?.sender.id !== msg.sender.id;
 
           return (
             <div key={msg.id} className={`${styles.msgRow} ${isMine ? styles.mine : ''} fade-in`}>
               {!isMine && (
                 <div className={styles.avatarCol} style={{ visibility: showAvatar ? 'visible' : 'hidden' }}>
-                  <div className="avatar" style={{width:32,height:32,fontSize:12}}>
+                  <div className="avatar" style={{ width: 32, height: 32, fontSize: 12 }}>
                     {msg.sender.avatar_url
-                      ? <img src={msg.sender.avatar_url} alt="" style={{width:'100%',height:'100%',borderRadius:'50%'}} />
-                      : msg.sender.username?.slice(0,2).toUpperCase()}
+                      ? <img src={msg.sender.avatar_url} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                      : msg.sender.username?.slice(0, 2).toUpperCase()}
                   </div>
                 </div>
               )}
@@ -167,7 +175,7 @@ export default function ChatRoom({ room }) {
 
         {typingList.length > 0 && (
           <div className={styles.typing}>
-            <span className={styles.typingDots}><span/><span/><span/></span>
+            <span className={styles.typingDots}><span /><span /><span /></span>
             {typingList.join(', ')} {typingList.length === 1 ? 'is' : 'are'} typing
           </div>
         )}
@@ -194,10 +202,10 @@ export default function ChatRoom({ room }) {
       {/* Input */}
       <div className={styles.inputArea}>
         <input type="file" ref={fileRef} onChange={handleFileUpload} style={{ display: 'none' }}
-          accept="image/*,.pdf,.txt,.zip" />
+          accept={room.is_global ? "image/gif,.pdf,.txt,.zip" : "image/*,video/*,.pdf,.txt,.zip"} />
         <button className={styles.attachBtn} onClick={() => fileRef.current?.click()} disabled={uploading}>
           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
           </svg>
         </button>
         <textarea
@@ -210,7 +218,7 @@ export default function ChatRoom({ room }) {
         />
         <button className={styles.sendBtn} onClick={handleSend} disabled={!text.trim()}>
           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
           </svg>
         </button>
       </div>

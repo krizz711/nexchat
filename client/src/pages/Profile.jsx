@@ -44,21 +44,26 @@ export default function Profile() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <button className={styles.back} onClick={() => navigate('/')}>← Back to chat</button>
+        <button className={styles.back} onClick={() => navigate('/')}>Back to chat</button>
 
-        <h1 className={styles.title}>Your Profile</h1>
+        <h1 className={styles.title}>My Profile</h1>
 
         {msg && <div className={styles.success}>{msg}</div>}
         {error && <div className={styles.error}>{error}</div>}
 
         {/* Avatar */}
         <div className={styles.avatarSection}>
-          <div className={styles.avatarBig}>
-            {user?.avatar_url
-              ? <img src={user.avatar_url} alt={user.username} />
-              : initials(user?.username)}
+          <div className={styles.avatarWrap}>
+            <div className={styles.avatarBig}>
+              {user?.avatar_url
+                ? <img src={user.avatar_url} alt={user.username} />
+                : initials(user?.username)}
+            </div>
+            <span className={styles.statusDot} />
           </div>
-          <div>
+          <div className={styles.identity}>
+            <h2>{user?.username}</h2>
+            <p>{user?.bio || 'Set your bio to help others know you better.'}</p>
             <input type="file" ref={fileRef} onChange={handleAvatarChange}
               accept="image/*" style={{display:'none'}} />
             <button className="btn btn-ghost" onClick={() => fileRef.current?.click()} disabled={uploading}>
@@ -94,6 +99,10 @@ export default function Profile() {
           <div className={styles.infoRow}>
             <span>Member since</span>
             <span>{new Date(user?.created_at).toLocaleDateString()}</span>
+          </div>
+          <div className={styles.infoRow}>
+            <span>Email</span>
+            <span>{user?.email}</span>
           </div>
         </div>
       </div>

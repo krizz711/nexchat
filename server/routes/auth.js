@@ -71,6 +71,106 @@ router.get('/me', authMiddleware, (req, res) => {
   res.json({ user: req.user });
 });
 
+// Get star stats for a list of user IDs
+router.get('/stars', authMiddleware, async (req, res) => {
+  const idsParam = req.query.ids;
+  if (!idsParam) return res.json({ counts: {}, starredByMe: [] });
+
+  const ids = String(idsParam)
+    .split(',')
+    .map(v => v.trim())
+    .filter(Boolean);
+
+  if (!ids.length) return res.json({ counts: {}, starredByMe: [] });
+
+  try {
+    const { data: allStars, error: allErr } = await supabase
+      .from('user_stars')
+      .select('starred_user_id')
+      .in('starred_user_id', ids);
+
+    if (allErr) throw allErr;
+
+    const { data: mine, error: mineErr } = await supabase
+      .from('user_stars')
+      .select('starred_user_id')
+      .eq('starred_by', req.user.id)
+      .in('starred_user_id', ids);
+
+    if (mineErr) throw mineErr;
+
+    const counts = {};
+    ids.forEach(id => { counts[id] = 0; });
+    (allStars || []).forEach(row => {
+      counts[row.starred_user_id] = (counts[row.starred_user_id] || 0) + 1;
+    });
+
+    res.json({
+      counts,
+      starredByMe: (mine || []).map(r => r.starred_user_id),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Star or unstar another user (toggle)
+router.post('/star/:userId', authMiddleware, async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) return res.status(400).json({ error: 'Target user is required' });
+  if (userId === req.user.id) return res.status(400).json({ error: 'You cannot star yourself' });
+
+  try {
+    const { data: target, error: targetErr } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (targetErr) throw targetErr;
+    if (!target) return res.status(404).json({ error: 'User not found' });
+
+    const { data: existing, error: existingErr } = await supabase
+      .from('user_stars')
+      .select('starred_user_id')
+      .eq('starred_by', req.user.id)
+      .eq('starred_user_id', userId)
+      .maybeSingle();
+
+    if (existingErr) throw existingErr;
+
+    let starred;
+    if (existing) {
+      const { error: delErr } = await supabase
+        .from('user_stars')
+        .delete()
+        .eq('starred_by', req.user.id)
+        .eq('starred_user_id', userId);
+
+      if (delErr) throw delErr;
+      starred = false;
+    } else {
+      const { error: insErr } = await supabase
+        .from('user_stars')
+        .insert({ starred_by: req.user.id, starred_user_id: userId });
+
+      if (insErr) throw insErr;
+      starred = true;
+    }
+
+    const { count, error: countErr } = await supabase
+      .from('user_stars')
+      .select('starred_user_id', { count: 'exact', head: true })
+      .eq('starred_user_id', userId);
+
+    if (countErr) throw countErr;
+
+    res.json({ userId, starred, starCount: count || 0 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Update profile
 router.put('/profile', authMiddleware, async (req, res) => {
   const { username, bio } = req.body;

@@ -1,4 +1,5 @@
 const redis = require('../redis/redisClient');
+const supabase = require('../db/supabase');
 
 // Simple profanity filter - add words as needed
 const BAD_WORDS = ['spam', 'scam']; // extend as needed
@@ -90,8 +91,16 @@ module.exports = (io) => {
     });
 
     // ─── SEND FILE/IMAGE IN ROOM ─────────────────────────────────
-    socket.on('message:file', ({ roomId, fileUrl, fileName, fileType, fileSize }) => {
+    socket.on('message:file', async ({ roomId, fileUrl, fileName, fileType, fileSize }) => {
       if (!roomId || !fileUrl) return;
+
+      const { data: group } = await supabase.from('groups').select('is_global').eq('id', roomId).single();
+      if (group?.is_global) {
+        if ((fileType?.startsWith('image/') && fileType !== 'image/gif') || fileType?.startsWith('video/')) {
+          socket.emit('message:error', { error: 'Images and videos are not allowed in global rooms. Only GIFs are permitted.' });
+          return;
+        }
+      }
 
       const message = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,

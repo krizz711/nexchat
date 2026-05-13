@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { fetchGroups, createGroup, joinGroup, joinByInvite, leaveGroup } from '../utils/api';
 import styles from './Sidebar.module.css';
 
-export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserClick }) {
+export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserClick, onUserStar, starringUserId }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [groups, setGroups] = useState({ globalGroups: [], userGroups: [], publicGroups: [] });
@@ -183,17 +183,36 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
         {/* Online Users */}
         {onlineUsers?.length > 0 && (
           <div className={styles.section}>
-            <div className={styles.sectionLabel}>Online — {onlineUsers.length}</div>
+            <div className={styles.sectionLabel}>Popular Chatters — {onlineUsers.length}</div>
             {onlineUsers.map(u => (
-              <button key={u.id} className={styles.userBtn} onClick={() => onUserClick(u)}>
+              <div
+                key={u.id}
+                className={styles.userBtn}
+                onClick={() => onUserClick(u)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && onUserClick(u)}
+              >
                 <div className="avatar" style={{width:28,height:28,fontSize:11}}>
                   {u.avatar_url
                     ? <img src={u.avatar_url} alt={u.username} style={{width:'100%',height:'100%',borderRadius:'50%'}} />
                     : u.username?.slice(0,2).toUpperCase()}
                 </div>
                 <span className={styles.truncate}>{u.username}</span>
+                <button
+                  className={`${styles.starBtn} ${u.starredByMe ? styles.starred : ''}`}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUserStar?.(u.id);
+                  }}
+                  disabled={starringUserId === u.id}
+                  title={u.starredByMe ? 'Unstar this chatter' : 'Star this chatter'}
+                >
+                  {u.starredByMe ? '★' : '☆'} {u.stars || 0}
+                </button>
                 <span className={styles.onlineDot} />
-              </button>
+              </div>
             ))}
           </div>
         )}

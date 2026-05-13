@@ -1,33 +1,36 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0d0d0f;
-  --surface: #141416;
-  --surface2: #1c1c1f;
-  --surface3: #242428;
-  --border: #2a2a2e;
-  --border2: #333338;
-  --text: #e8e8ec;
-  --text2: #9898a8;
-  --text3: #5a5a6a;
-  --accent: #5b6af0;
-  --accent-hover: #6e7cf5;
-  --accent-dim: rgba(91,106,240,0.15);
-  --green: #3ecf8e;
-  --red: #f04f4f;
-  --yellow: #f0b429;
-  --radius: 10px;
-  --radius-sm: 6px;
-  --shadow: 0 4px 24px rgba(0,0,0,0.4);
-  --font: 'Space Grotesk', sans-serif;
-  --mono: 'IBM Plex Mono', monospace;
+  --bg: #faf9fe;
+  --surface: #ffffff;
+  --surface2: #f4f3f8;
+  --surface3: #e9e7ed;
+  --border: #c0c8cd;
+  --border2: #aeb7bd;
+  --text: #1a1b1f;
+  --text2: #40484c;
+  --text3: #6f7881;
+  --accent: #006193;
+  --accent-hover: #0077b2;
+  --accent-dim: rgba(0, 97, 147, 0.12);
+  --green: #006e28;
+  --red: #ba1a1a;
+  --yellow: #8c5000;
+  --radius: 16px;
+  --radius-sm: 12px;
+  --shadow: 0 10px 30px rgba(26, 27, 31, 0.08);
+  --font: 'Inter', sans-serif;
+  --mono: 'Inter', sans-serif;
 }
 
 html, body, #root {
   height: 100%;
   width: 100%;
   font-family: var(--font);
-  background: var(--bg);
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(146, 204, 255, 0.35), transparent 60%),
+    radial-gradient(1000px 500px at 90% 0%, rgba(111, 251, 133, 0.22), transparent 60%),
+    var(--bg);
   color: var(--text);
   overflow: hidden;
 }
@@ -51,7 +54,10 @@ input, textarea {
   transition: border-color 0.2s;
   width: 100%;
 }
-input:focus, textarea:focus { border-color: var(--accent); }
+input:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 97, 147, 0.12);
+}
 input::placeholder, textarea::placeholder { color: var(--text3); }
 
 /* Buttons */
@@ -83,7 +89,7 @@ button {
   width: 36px; height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  background: var(--accent-dim);
+  background: linear-gradient(145deg, rgba(146, 204, 255, 0.4), rgba(111, 251, 133, 0.25));
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; font-weight: 600; color: var(--accent);
   flex-shrink: 0;
@@ -111,3 +117,9 @@ button {
   to { transform: translateX(0); opacity: 1; }
 }
 .fade-in { animation: fadeIn 0.2s ease forwards; }
+
+@media (max-width: 900px) {
+  html, body, #root {
+    overflow: auto;
+  }
+}
