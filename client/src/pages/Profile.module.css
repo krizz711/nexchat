@@ -119,15 +119,40 @@
   max-width: 420px;
 }
 
+.popularityBadge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(146, 204, 255, 0.14);
+  border: 1px solid rgba(146, 204, 255, 0.25);
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .avatarHint { font-size: 11px; color: var(--text3); margin-top: 6px; }
 
 .form { display: flex; flex-direction: column; gap: 16px; }
+
+.twoCol {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
 
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field label {
   font-size: 11px; font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.5px;
   color: var(--text2);
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
 }
 
 .disabled { opacity: 0.5; cursor: not-allowed; }
@@ -163,5 +188,9 @@
     flex-direction: column;
     align-items: flex-start;
     padding: 14px;
+  }
+
+  .twoCol {
+    grid-template-columns: 1fr;
   }
 }

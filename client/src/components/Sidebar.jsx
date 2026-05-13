@@ -15,8 +15,18 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
   const [inviteCode, setInviteCode] = useState('');
   const [copiedCode, setCopiedCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return document.documentElement.classList.contains('dark-mode');
+  });
 
   useEffect(() => { loadGroups(); }, []);
+
+  const toggleTheme = () => {
+    const html = document.documentElement;
+    html.classList.toggle('dark-mode');
+    setIsDarkMode(!isDarkMode);
+    localStorage.setItem('nexchat-theme', isDarkMode ? 'light' : 'dark');
+  };
 
   const loadGroups = async () => {
     try {
@@ -71,6 +81,9 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
       <div className={styles.header}>
         <span className={styles.logo}>NexChat</span>
         <div className={styles.headerActions}>
+          <button className={styles.themeToggle} onClick={toggleTheme} title="Toggle theme">
+            {isDarkMode ? '☀️' : '🌙'}
+          </button>
           <button className={styles.iconBtn} onClick={() => navigate('/profile')} title="Profile">
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -188,34 +201,36 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
           <div className={styles.section}>
             <div className={styles.sectionLabel}>Popular Chatters — {onlineUsers.length}</div>
             {onlineUsers.map(u => (
-              <div
+              <button
                 key={u.id}
                 className={styles.userBtn}
                 onClick={() => onUserClick(u)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && onUserClick(u)}
+                title={`Message ${u.username}`}
               >
                 <div className="avatar" style={{width:28,height:28,fontSize:11}}>
                   {u.avatar_url
                     ? <img src={u.avatar_url} alt={u.username} style={{width:'100%',height:'100%',borderRadius:'50%'}} />
                     : u.username?.slice(0,2).toUpperCase()}
                 </div>
-                <span className={styles.truncate}>{u.username}</span>
-                <button
-                  className={`${styles.starBtn} ${u.starredByMe ? styles.starred : ''}`}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onUserStar?.(u.id);
-                  }}
-                  disabled={starringUserId === u.id || u.id?.startsWith('guest_')}
-                  title={u.starredByMe ? 'Unstar this chatter' : 'Star this chatter'}
-                >
-                  {u.starredByMe ? '★' : '☆'} {u.stars || 0}
-                </button>
-                <span className={styles.onlineDot} />
-              </div>
+                <div className={styles.userContent}>
+                  <span className={styles.userName}>{u.username}</span>
+                  <div className={styles.userMeta}>
+                    <button
+                      className={`${styles.starBtn} ${u.starredByMe ? styles.starred : ''}`}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onUserStar?.(u.id);
+                      }}
+                      disabled={starringUserId === u.id || u.id?.startsWith('guest_') || u.id === user?.id || u.starredByMe}
+                      title={u.starredByMe ? 'Already starred' : 'Star this chatter'}
+                    >
+                      {u.starredByMe ? '★' : '☆'} {u.stars || 0}
+                    </button>
+                    <span className={styles.onlineDot} />
+                  </div>
+                </div>
+              </button>
             ))}
           </div>
         )}

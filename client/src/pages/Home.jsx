@@ -65,7 +65,7 @@ export default function Home() {
   };
 
   const handleUserStar = async (targetUserId) => {
-    if (!targetUserId || starringUserId) return;
+    if (!targetUserId || starringUserId || targetUserId === user.id) return;
     setStarringUserId(targetUserId);
     try {
       const data = await toggleStar(targetUserId);
@@ -81,8 +81,10 @@ export default function Home() {
           ? { ...prev, stars: data.starCount, starredByMe: data.starred }
           : prev
       ));
-    } catch {
-      // no-op: keep chat flow uninterrupted if starring fails
+    } catch (err) {
+      if (err.response?.status !== 409) {
+        // no-op: keep chat flow uninterrupted if starring fails
+      }
     } finally {
       setStarringUserId('');
     }

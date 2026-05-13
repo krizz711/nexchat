@@ -54,6 +54,16 @@
   gap: 6px;
 }
 
+.field select {
+  width: 100%;
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
 .field label {
   font-size: 12px;
   font-weight: 500;
@@ -149,6 +159,15 @@
   margin-top: -2px;
 }
 
+.profileNote {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface2);
+  color: var(--text2);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .divider {
   display: flex;
   align-items: center;
@@ -168,4 +187,10 @@
   justify-content: center;
   font-size: 13px;
   padding: 8px;
+}
+
+@media (max-width: 520px) {
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
 }

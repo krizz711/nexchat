@@ -10,7 +10,14 @@ export default function Profile() {
   const [searchParams] = useSearchParams();
   const [viewingUser, setViewingUser] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ username: user?.username || '', bio: user?.bio || '' });
+  const [form, setForm] = useState({
+    username: user?.username || '',
+    bio: user?.bio || '',
+    country: user?.country || '',
+    state: user?.state || '',
+    gender: user?.gender || 'other',
+    age: user?.age || '',
+  });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState('');
@@ -19,6 +26,17 @@ export default function Profile() {
 
   const SERVER = import.meta.env.VITE_SERVER_URL || '';
   const initials = (name) => name?.slice(0, 2).toUpperCase() || '??';
+
+  useEffect(() => {
+    setForm({
+      username: user?.username || '',
+      bio: user?.bio || '',
+      country: user?.country || '',
+      state: user?.state || '',
+      gender: user?.gender || 'other',
+      age: user?.age || '',
+    });
+  }, [user]);
 
   // Check if viewing another user
   useEffect(() => {
@@ -96,6 +114,7 @@ export default function Profile() {
             <div className={styles.identity}>
               <h2>{viewingUser.username}</h2>
               <p>{viewingUser.bio || 'No bio yet.'}</p>
+              <div className={styles.popularityBadge}>Popularity score: {viewingUser.star_count || 0}</div>
             </div>
           </div>
 
@@ -105,6 +124,26 @@ export default function Profile() {
               <span>Member since</span>
               <span>{new Date(viewingUser.created_at).toLocaleDateString()}</span>
             </div>
+              <div className={styles.infoRow}>
+                <span>Country</span>
+                <span>{viewingUser.country || 'Not provided'}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span>State / Region</span>
+                <span>{viewingUser.state || 'Not provided'}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span>Gender</span>
+                <span>{viewingUser.gender || 'other'}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span>Age</span>
+                <span>{viewingUser.age || 'Not provided'}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span>Popularity score</span>
+                <span>{viewingUser.star_count || 0}</span>
+              </div>
           </div>
 
           {/* Actions */}
@@ -166,6 +205,7 @@ export default function Profile() {
           <div className={styles.identity}>
             <h2>{user?.username}</h2>
             <p>{user?.bio || 'Set your bio to help others know you better.'}</p>
+            <div className={styles.popularityBadge}>Popularity score: {user?.star_count || 0}</div>
             <input type="file" ref={fileRef} onChange={handleAvatarChange}
               accept="image/*" style={{display:'none'}} />
             <button className="btn btn-ghost" onClick={() => fileRef.current?.click()} disabled={uploading}>
@@ -191,6 +231,28 @@ export default function Profile() {
               placeholder="Tell people about yourself..." rows={3}
               style={{resize:'vertical'}} />
           </div>
+          <div className={styles.field}>
+            <label>Country</label>
+            <input name="country" value={form.country} onChange={handle} placeholder="e.g. Germany" />
+          </div>
+          <div className={styles.twoCol}>
+            <div className={styles.field}>
+              <label>State / Region</label>
+              <input name="state" value={form.state} onChange={handle} placeholder="e.g. Bavaria" />
+            </div>
+            <div className={styles.field}>
+              <label>Age</label>
+              <input name="age" type="number" min="13" max="120" value={form.age} onChange={handle} placeholder="25" />
+            </div>
+          </div>
+          <div className={styles.field}>
+            <label>Gender</label>
+            <select name="gender" value={form.gender} onChange={handle}>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
           <button className="btn btn-primary" onClick={save} disabled={saving}>
             {saving ? 'Saving...' : 'Save changes'}
           </button>
@@ -205,6 +267,26 @@ export default function Profile() {
           <div className={styles.infoRow}>
             <span>Email</span>
             <span>{user?.email}</span>
+          </div>
+          <div className={styles.infoRow}>
+            <span>Country</span>
+            <span>{user?.country || 'Not provided'}</span>
+          </div>
+          <div className={styles.infoRow}>
+            <span>State / Region</span>
+            <span>{user?.state || 'Not provided'}</span>
+          </div>
+          <div className={styles.infoRow}>
+            <span>Gender</span>
+            <span>{user?.gender || 'other'}</span>
+          </div>
+          <div className={styles.infoRow}>
+            <span>Age</span>
+            <span>{user?.age || 'Not provided'}</span>
+          </div>
+          <div className={styles.infoRow}>
+            <span>Popularity score</span>
+            <span>{user?.star_count || 0}</span>
           </div>
         </div>
       </div>

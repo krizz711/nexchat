@@ -19,6 +19,11 @@ const authMiddleware = async (req, res, next) => {
         email: null,
         avatar_url: null,
         bio: '',
+        country: null,
+        state: null,
+        gender: 'other',
+        age: null,
+        star_count: 0,
         isGuest: true,
       };
       return next();
@@ -27,7 +32,7 @@ const authMiddleware = async (req, res, next) => {
     // Registered user path — DB lookup
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, username, email, avatar_url, bio')
+      .select('id, username, email, avatar_url, bio, country, state, gender, age, star_count, created_at')
       .eq('id', decoded.userId)
       .single();
 
@@ -53,6 +58,11 @@ const socketAuth = async (socket, next) => {
         id: decoded.userId,
         username: decoded.username,
         avatar_url: null,
+        country: null,
+        state: null,
+        gender: 'other',
+        age: null,
+        star_count: 0,
         isGuest: true,
       };
       return next();
@@ -61,7 +71,7 @@ const socketAuth = async (socket, next) => {
     // Registered user path
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, username, avatar_url')
+      .select('id, username, avatar_url, country, state, gender, age, star_count')
       .eq('id', decoded.userId)
       .single();
 

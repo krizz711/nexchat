@@ -10,7 +10,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ email: '', password: '', country: '', state: '', gender: 'other', age: '' });
   const [guestName, setGuestName] = useState('');
   const [mode, setMode] = useState('options'); // 'options' | 'email' | 'guest'
   const [error, setError] = useState(searchParams.get('error') ? 'Authentication failed. Please try again.' : '');
@@ -22,7 +22,12 @@ export default function Login() {
     e.preventDefault();
     setError(''); setLoading(true);
     try {
-      await login(form.email, form.password);
+      await login(form.email, form.password, {
+        country: form.country,
+        state: form.state,
+        gender: form.gender,
+        age: form.age,
+      });
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');
@@ -97,6 +102,29 @@ export default function Login() {
               <label>Password</label>
               <input name="password" type="password" value={form.password} onChange={handle}
                 placeholder="••••••••" required />
+            </div>
+            <div className={styles.profileNote}>Optional profile details can be added here or later from your profile page.</div>
+            <div className={styles.field}>
+              <label>Country</label>
+              <input name="country" value={form.country} onChange={handle} placeholder="e.g. Canada" />
+            </div>
+            <div className={styles.twoCol}>
+              <div className={styles.field}>
+                <label>State / Region</label>
+                <input name="state" value={form.state} onChange={handle} placeholder="e.g. Ontario" />
+              </div>
+              <div className={styles.field}>
+                <label>Age</label>
+                <input name="age" type="number" min="13" max="120" value={form.age} onChange={handle} placeholder="21" />
+              </div>
+            </div>
+            <div className={styles.field}>
+              <label>Gender</label>
+              <select name="gender" value={form.gender} onChange={handle}>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="other">Other</option>
+              </select>
             </div>
             <button className={`btn btn-primary ${styles.submit}`} disabled={loading}>
               {loading ? 'Signing in...' : 'Sign in'}

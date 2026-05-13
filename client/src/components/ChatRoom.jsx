@@ -43,6 +43,12 @@ export default function ChatRoom({ room, onUserClick }) {
     else sendTypingStop();
   };
 
+  const getGlowClass = (gender) => {
+    if (gender === 'female') return styles.glowFemale;
+    if (gender === 'male') return styles.glowMale;
+    return styles.glowNeutral;
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -104,27 +110,29 @@ export default function ChatRoom({ room, onUserClick }) {
         )}
 
         {messages.map((msg, i) => {
-          const isMine = msg.sender.id === user.id;
-          const showAvatar = i === 0 || messages[i - 1]?.sender.id !== msg.sender.id;
+          const sender = msg.sender || {};
+          const isMine = sender.id === user.id;
+          const showAvatar = i === 0 || messages[i - 1]?.sender?.id !== sender.id;
+          const glowClass = getGlowClass(sender.gender);
 
           return (
             <div key={msg.id} className={`${styles.msgRow} ${isMine ? styles.mine : ''} fade-in`}>
               {!isMine && (
                 <div className={styles.avatarCol} style={{ visibility: showAvatar ? 'visible' : 'hidden' }}>
                   <div className="avatar" style={{ width: 32, height: 32, fontSize: 12, cursor: 'pointer' }}
-                    onClick={() => onUserClick?.(msg.sender)}
+                    onClick={() => onUserClick?.(sender)}
                     title="Click to message">
-                    {msg.sender.avatar_url
-                      ? <img src={msg.sender.avatar_url} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
-                      : msg.sender.username?.slice(0, 2).toUpperCase()}
+                    {sender.avatar_url
+                      ? <img src={sender.avatar_url} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                      : sender.username?.slice(0, 2).toUpperCase() || '??'}
                   </div>
                 </div>
               )}
 
               <div className={styles.msgContent}>
                 {showAvatar && !isMine && (
-                  <div className={styles.senderName} onClick={() => onUserClick?.(msg.sender)} style={{ cursor: 'pointer', textDecoration: 'underline' }} title="Click to message">
-                    {msg.sender.username}
+                  <div className={styles.senderName} onClick={() => onUserClick?.(sender)} style={{ cursor: 'pointer', textDecoration: 'underline' }} title="Click to message">
+                    {sender.username || 'Unknown'}
                   </div>
                 )}
 
@@ -132,7 +140,7 @@ export default function ChatRoom({ room, onUserClick }) {
                   <div className={styles.replyBadge}>↩ Replying to message</div>
                 )}
 
-                <div className={`${styles.bubble} ${isMine ? styles.bubbleMine : styles.bubbleOther}`}
+                <div className={`${styles.bubble} ${isMine ? styles.bubbleMine : styles.bubbleOther} ${glowClass}`}
                   onDoubleClick={() => setReplyTo(msg)}>
 
                   {msg.type === 'file' && (

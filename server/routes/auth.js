@@ -7,6 +7,18 @@ const { upload, cloudinary } = require('../config/cloudinary');
 const passport = require('../config/passport');
 const rateLimit = require('express-rate-limit');
 
+const normalizeGender = (value) => {
+  const gender = String(value || 'other').toLowerCase();
+  return ['female', 'male', 'other'].includes(gender) ? gender : 'other';
+};
+
+const parseAge = (value) => {
+  if (value === undefined || value === null || value === '') return null;
+  const age = Number(value);
+  if (!Number.isInteger(age)) return null;
+  return age;
+};
+
 // ── GOOGLE OAUTH ──────────────────────────────────────────────────
 
 // Step 1: Redirect to Google
@@ -14,14 +26,32 @@ router.get('/google',
   passport.authenticate('google', { scope: ['profile', 'email'], session: false })
 );
 
-// Step 2: Google callback
+// Step 2: Google callback with detailed error logging
 router.get('/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: '/login?error=google_failed' }),
-  (req, res) => {
-    const { user, token } = req.user;
-    const CLIENT = process.env.CLIENT_URL || 'http://localhost:5173';
-    // Redirect to frontend with token in query — frontend reads it and stores
-    res.redirect(`${CLIENT}/auth/callback?token=${token}&userId=${user.id}`);
+  (req, res, next) => {
+    passport.authenticate('google', { session: false }, (err, user, info) => {
+      if (err) {
+        console.error('❌ Google OAuth Error Details:', {
+          message: err.message,
+          code: err.code,
+          status: err.status,
+          body: err.body,
+          fullError: JSON.stringify(err, null, 2),
+        });
+        const errorMsg = err.code || err.message || 'google_failed';
+        return res.redirect(`/login?error=${encodeURIComponent(errorMsg)}`);
+      }
+
+      if (!user) {
+        console.error('❌ Google OAuth: No user returned', info);
+        return res.redirect(`/login?error=no_user&info=${encodeURIComponent(JSON.stringify(info))}`);
+      }
+
+      console.log('✅ Google OAuth Success:', { userId: user.user?.id, username: user.user?.username });
+      const { user: userData, token } = user;
+      const CLIENT = process.env.CLIENT_URL || 'http://localhost:5173';
+      res.redirect(`${CLIENT}/auth/callback?token=${token}&userId=${userData.id}`);
+    })(req, res, next);
   }
 );
 
@@ -68,7 +98,7 @@ router.post('/guest', guestLimiter, async (req, res) => {
 
 // Register
 router.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, country, state, gender, age } = req.body;
   if (!username || !email || !password)
     return res.status(400).json({ error: 'All fields required' });
 
@@ -88,8 +118,16 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
     const { data: user, error } = await supabase
       .from('users')
-      .insert({ username, email, password_hash: hashedPassword })
-      .select('id, username, email, avatar_url, bio')
+      .insert({
+        username,
+        email,
+        password_hash: hashedPassword,
+        country: country?.trim() || null,
+        state: state?.trim() || null,
+        gender: normalizeGender(gender),
+        age: parseAge(age),
+      })
+      .select('id, username, email, avatar_url, bio, country, state, gender, age, star_count, created_at')
       .single();
 
     if (error) throw error;
@@ -103,14 +141,14 @@ router.post('/register', async (req, res) => {
 
 // Login
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, country, state, gender, age } = req.body;
   if (!email || !password)
     return res.status(400).json({ error: 'Email and password required' });
 
   try {
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, username, email, avatar_url, bio, password_hash')
+      .select('id, username, email, avatar_url, bio, country, state, gender, age, star_count, created_at, password_hash')
       .eq('email', email)
       .single();
 
@@ -119,7 +157,28 @@ router.post('/login', async (req, res) => {
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
-    const { password_hash, ...safeUser } = user;
+    const profilePatch = {};
+    if (country !== undefined) profilePatch.country = country?.trim() || null;
+    if (state !== undefined) profilePatch.state = state?.trim() || null;
+    if (gender !== undefined) profilePatch.gender = normalizeGender(gender);
+    if (age !== undefined) profilePatch.age = parseAge(age);
+
+    let safeUser = user;
+    if (Object.keys(profilePatch).length) {
+      const { data: updated, error: updateError } = await supabase
+        .from('users')
+        .update(profilePatch)
+        .eq('id', user.id)
+        .select('id, username, email, avatar_url, bio, country, state, gender, age, star_count, created_at')
+        .single();
+
+      if (updateError) throw updateError;
+      safeUser = updated;
+    } else {
+      const { password_hash, ...rest } = user;
+      safeUser = rest;
+    }
+
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
     res.json({ user: safeUser, token });
   } catch (err) {
@@ -145,12 +204,12 @@ router.get('/stars', authMiddleware, async (req, res) => {
   if (!ids.length) return res.json({ counts: {}, starredByMe: [] });
 
   try {
-    const { data: allStars, error: allErr } = await supabase
-      .from('user_stars')
-      .select('starred_user_id')
-      .in('starred_user_id', ids);
+    const { data: users, error: usersErr } = await supabase
+      .from('users')
+      .select('id, star_count')
+      .in('id', ids);
 
-    if (allErr) throw allErr;
+    if (usersErr) throw usersErr;
 
     const { data: mine, error: mineErr } = await supabase
       .from('user_stars')
@@ -162,8 +221,8 @@ router.get('/stars', authMiddleware, async (req, res) => {
 
     const counts = {};
     ids.forEach(id => { counts[id] = 0; });
-    (allStars || []).forEach(row => {
-      counts[row.starred_user_id] = (counts[row.starred_user_id] || 0) + 1;
+    (users || []).forEach(row => {
+      counts[row.id] = row.star_count || 0;
     });
 
     res.json({
@@ -200,34 +259,25 @@ router.post('/star/:userId', authMiddleware, async (req, res) => {
       .maybeSingle();
 
     if (existingErr) throw existingErr;
-
-    let starred;
     if (existing) {
-      const { error: delErr } = await supabase
-        .from('user_stars')
-        .delete()
-        .eq('starred_by', req.user.id)
-        .eq('starred_user_id', userId);
-
-      if (delErr) throw delErr;
-      starred = false;
-    } else {
-      const { error: insErr } = await supabase
-        .from('user_stars')
-        .insert({ starred_by: req.user.id, starred_user_id: userId });
-
-      if (insErr) throw insErr;
-      starred = true;
+      return res.status(409).json({ error: 'You have already starred this user' });
     }
 
-    const { count, error: countErr } = await supabase
+    const { error: insErr } = await supabase
       .from('user_stars')
-      .select('starred_user_id', { count: 'exact', head: true })
-      .eq('starred_user_id', userId);
+      .insert({ starred_by: req.user.id, starred_user_id: userId });
+
+    if (insErr) throw insErr;
+
+    const { data: targetUser, error: countErr } = await supabase
+      .from('users')
+      .select('star_count')
+      .eq('id', userId)
+      .single();
 
     if (countErr) throw countErr;
 
-    res.json({ userId, starred, starCount: count || 0 });
+    res.json({ userId, starred: true, starCount: targetUser?.star_count || 0 });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -239,13 +289,21 @@ router.put('/profile', authMiddleware, async (req, res) => {
     return res.status(403).json({ error: 'Guests cannot update profiles' });
   }
 
-  const { username, bio } = req.body;
+  const { username, bio, country, state, gender, age } = req.body;
   try {
+    const profilePatch = {};
+    if (username !== undefined) profilePatch.username = username?.trim();
+    if (bio !== undefined) profilePatch.bio = bio?.trim() || '';
+    if (country !== undefined) profilePatch.country = country?.trim() || null;
+    if (state !== undefined) profilePatch.state = state?.trim() || null;
+    if (gender !== undefined) profilePatch.gender = normalizeGender(gender);
+    if (age !== undefined) profilePatch.age = parseAge(age);
+
     const { data, error } = await supabase
       .from('users')
-      .update({ username, bio })
+      .update(profilePatch)
       .eq('id', req.user.id)
-      .select('id, username, email, avatar_url, bio')
+      .select('id, username, email, avatar_url, bio, country, state, gender, age, star_count, created_at')
       .single();
 
     if (error) throw error;
@@ -268,7 +326,7 @@ router.post('/avatar', authMiddleware, upload.single('avatar'), async (req, res)
       .from('users')
       .update({ avatar_url: req.file.path })
       .eq('id', req.user.id)
-      .select('id, username, email, avatar_url, bio')
+      .select('id, username, email, avatar_url, bio, country, state, gender, age, star_count, created_at')
       .single();
 
     if (error) throw error;
@@ -286,7 +344,7 @@ router.get('/users/:userId', async (req, res) => {
   try {
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, username, email, avatar_url, bio, created_at')
+      .select('id, username, email, avatar_url, bio, country, state, gender, age, star_count, created_at')
       .eq('id', userId)
       .single();
 
