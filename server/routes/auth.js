@@ -4,6 +4,67 @@ const jwt = require('jsonwebtoken');
 const supabase = require('../db/supabase');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { upload, cloudinary } = require('../config/cloudinary');
+const passport = require('../config/passport');
+const rateLimit = require('express-rate-limit');
+
+// ── GOOGLE OAUTH ──────────────────────────────────────────────────
+
+// Step 1: Redirect to Google
+router.get('/google',
+  passport.authenticate('google', { scope: ['profile', 'email'], session: false })
+);
+
+// Step 2: Google callback
+router.get('/google/callback',
+  passport.authenticate('google', { session: false, failureRedirect: '/login?error=google_failed' }),
+  (req, res) => {
+    const { user, token } = req.user;
+    const CLIENT = process.env.CLIENT_URL || 'http://localhost:5173';
+    // Redirect to frontend with token in query — frontend reads it and stores
+    res.redirect(`${CLIENT}/auth/callback?token=${token}&userId=${user.id}`);
+  }
+);
+
+// ── GUEST LOGIN ───────────────────────────────────────────────────
+
+const guestLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Too many guest sessions from this IP' },
+});
+
+router.post('/guest', guestLimiter, async (req, res) => {
+  const { username } = req.body;
+
+  if (!username || typeof username !== 'string') {
+    return res.status(400).json({ error: 'Username is required' });
+  }
+
+  const clean = username.trim().replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 20);
+  if (clean.length < 2) {
+    return res.status(400).json({ error: 'Username must be at least 2 characters' });
+  }
+
+  // Guest JWT — short-lived, carries guest flag, no DB record
+  const guestId = `guest_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const token = jwt.sign(
+    { userId: guestId, username: clean, isGuest: true },
+    process.env.JWT_SECRET,
+    { expiresIn: '4h' }  // Guests auto-expire
+  );
+
+  res.json({
+    user: {
+      id: guestId,
+      username: clean,
+      email: null,
+      avatar_url: null,
+      bio: '',
+      isGuest: true,
+    },
+    token,
+  });
+});
 
 // Register
 router.post('/register', async (req, res) => {
@@ -173,6 +234,10 @@ router.post('/star/:userId', authMiddleware, async (req, res) => {
 
 // Update profile
 router.put('/profile', authMiddleware, async (req, res) => {
+  if (req.user.isGuest) {
+    return res.status(403).json({ error: 'Guests cannot update profiles' });
+  }
+
   const { username, bio } = req.body;
   try {
     const { data, error } = await supabase
@@ -191,6 +256,10 @@ router.put('/profile', authMiddleware, async (req, res) => {
 
 // Upload avatar
 router.post('/avatar', authMiddleware, upload.single('avatar'), async (req, res) => {
+  if (req.user.isGuest) {
+    return res.status(403).json({ error: 'Guests cannot upload avatars' });
+  }
+
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 

@@ -93,7 +93,10 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
         <div>
           <div className={styles.userName}>{user?.username}</div>
           <div className={styles.userStatus}>
-            <span className={styles.dot} /> Online
+            <span className={styles.dot} />
+            {user?.isGuest ? (
+              <span style={{ color: 'var(--yellow)', fontSize: 11 }}>Guest · 4h session</span>
+            ) : 'Online'}
           </div>
         </div>
       </div>

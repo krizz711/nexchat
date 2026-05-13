@@ -10,12 +10,17 @@ create extension if not exists "uuid-ossp";
 create table users (
   id uuid primary key default uuid_generate_v4(),
   username text unique not null,
-  email text unique not null,
-  password_hash text not null,
+  email text unique,
+  password_hash text,
   avatar_url text,
   bio text default '',
+  google_id text unique,
+  auth_provider text default 'email' check (auth_provider IN ('email', 'google', 'guest')),
   created_at timestamptz default now()
 );
+
+-- Index for fast Google ID lookup
+create index if not exists idx_users_google_id on users(google_id);
 
 -- ── GROUPS ───────────────────────────────────────────────────
 create table groups (

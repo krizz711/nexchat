@@ -10,6 +10,21 @@ const authMiddleware = async (req, res, next) => {
   const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Guest path — no DB lookup
+    if (decoded.isGuest) {
+      req.user = {
+        id: decoded.userId,
+        username: decoded.username,
+        email: null,
+        avatar_url: null,
+        bio: '',
+        isGuest: true,
+      };
+      return next();
+    }
+
+    // Registered user path — DB lookup
     const { data: user, error } = await supabase
       .from('users')
       .select('id, username, email, avatar_url, bio')
@@ -31,6 +46,19 @@ const socketAuth = async (socket, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Guest path
+    if (decoded.isGuest) {
+      socket.user = {
+        id: decoded.userId,
+        username: decoded.username,
+        avatar_url: null,
+        isGuest: true,
+      };
+      return next();
+    }
+
+    // Registered user path
     const { data: user, error } = await supabase
       .from('users')
       .select('id, username, avatar_url')

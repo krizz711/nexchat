@@ -6,6 +6,7 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const { socketAuth } = require('./middleware/authMiddleware');
 const socketHandler = require('./socket/socketHandler');
+const passport = require('./config/passport');
 
 const app = express();
 const httpServer = createServer(app);
@@ -26,6 +27,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json({ limit: '1mb' }));
+app.use(passport.initialize());
 
 // Rate limiting
 const limiter = rateLimit({

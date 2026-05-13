@@ -7,6 +7,32 @@ import styles from './Profile.module.css';
 export default function Profile() {
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
+
+  // Guest user check
+  if (user?.isGuest) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.card}>
+          <button className={styles.back} onClick={() => navigate('/')}>← Back to chat</button>
+          <h1 className={styles.title}>Guest Session</h1>
+          <div style={{ padding: '20px 0', color: 'var(--text2)', fontSize: 14, lineHeight: 1.7 }}>
+            <p>You're chatting as <strong>{user.username}</strong> (guest).</p>
+            <p style={{ marginTop: 8 }}>Guests can't edit profiles or upload avatars.</p>
+            <p style={{ marginTop: 8 }}>Your session expires in 4 hours.</p>
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+            <button className="btn btn-primary" onClick={() => navigate('/login')}>
+              Create a real account
+            </button>
+            <button className="btn btn-ghost" onClick={() => navigate('/')}>
+              Back to chat
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const [form, setForm] = useState({ username: user?.username || '', bio: user?.bio || '' });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
