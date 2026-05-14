@@ -15,7 +15,7 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
   const [inviteCode, setInviteCode] = useState('');
   const [copiedCode, setCopiedCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [activePanel, setActivePanel] = useState('rooms');
+  const [activePanel, setActivePanel] = useState('active');
   const [userSearch, setUserSearch] = useState('');
   const [genderFilter, setGenderFilter] = useState('all');
   const [userSort, setUserSort] = useState('popularity');
@@ -36,7 +36,7 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
     try {
       const data = await fetchGroups();
       setGroups(data);
-    } catch {}
+    } catch { }
   };
 
   const handleCreate = async () => {
@@ -46,7 +46,7 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
       await createGroup(newGroupName.trim(), isPrivate);
       setNewGroupName(''); setIsPrivate(false); setShowCreate(false);
       await loadGroups();
-    } catch {} finally { setLoading(false); }
+    } catch { } finally { setLoading(false); }
   };
 
   const handleJoinByCode = async () => {
@@ -56,19 +56,19 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
       await joinByInvite(inviteCode.trim());
       setInviteCode(''); setShowJoin(false);
       await loadGroups();
-    } catch {} finally { setLoading(false); }
+    } catch { } finally { setLoading(false); }
   };
 
   const handleJoinPublic = async (groupId) => {
     try {
       await joinGroup(groupId);
       await loadGroups();
-    } catch {}
+    } catch { }
   };
 
   const handleLeave = async (groupId, e) => {
     e.stopPropagation();
-    try { await leaveGroup(groupId); await loadGroups(); } catch {}
+    try { await leaveGroup(groupId); await loadGroups(); } catch { }
   };
 
   const copyCode = (code) => {
@@ -122,12 +122,12 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
           </button>
           <button className={styles.iconBtn} onClick={() => navigate('/profile')} title="Profile">
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
             </svg>
           </button>
           <button className={styles.iconBtn} onClick={logout} title="Logout">
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
             </svg>
           </button>
         </div>
@@ -136,7 +136,7 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
       {/* User info */}
       <div className={styles.userInfo}>
         <div className="avatar">{user?.avatar_url
-          ? <img src={user.avatar_url} alt={user.username} style={{width:'100%',height:'100%',borderRadius:'50%'}} />
+          ? <img src={user.avatar_url} alt={user.username} style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
           : initials(user?.username)}
         </div>
         <div>
@@ -286,10 +286,10 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
                 tabIndex={0}
                 title={`Message ${u.username}`}
               >
-                <div className="avatar" style={{width:28,height:28,fontSize:11}}>
+                <div className="avatar" style={{ width: 28, height: 28, fontSize: 11 }}>
                   {u.avatar_url
-                    ? <img src={u.avatar_url} alt={u.username} style={{width:'100%',height:'100%',borderRadius:'50%'}} />
-                    : u.username?.slice(0,2).toUpperCase()}
+                    ? <img src={u.avatar_url} alt={u.username} style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                    : u.username?.slice(0, 2).toUpperCase()}
                 </div>
                 <div className={styles.userContent}>
                   <span className={styles.userName}>{u.username}</span>

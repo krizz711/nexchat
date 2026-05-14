@@ -1,19 +1,22 @@
 .sidebar {
-  width: 320px;
-  min-width: 320px;
+  width: 340px;
+  min-width: 340px;
   height: 100vh;
-  background: var(--surface2, #2d3748);
-  backdrop-filter: blur(20px);
-  border-right: 1px solid var(--border, rgba(216, 214, 214, 0.673));
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-right: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 1px 0 24px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
 }
 
 html.dark-mode .sidebar {
-  background: var(--surface, #1a202c);
-  border-right-color: var(--border, rgba(74, 82, 90, 0.4));
+  background: rgba(15, 23, 42, 0.45);
+  border-right-color: rgba(255, 255, 255, 0.05);
 }
 
 .header {
@@ -31,8 +34,8 @@ html.dark-mode .sidebar {
   letter-spacing: -0.02em;
 }
 
-.headerActions { 
-  display: flex; 
+.headerActions {
+  display: flex;
   gap: 4px;
   align-items: center;
 }
@@ -50,7 +53,8 @@ html.dark-mode .sidebar {
   border: 1px solid var(--border);
   transition: all 0.15s;
 }
-.themeToggle:hover { 
+
+.themeToggle:hover {
   border-color: var(--accent);
   background: var(--surface3);
   transform: translateY(-1px);
@@ -94,36 +98,77 @@ html.dark-mode .sidebar {
   justify-content: center;
   transition: all 0.15s;
 }
-.iconBtn:hover { color: var(--accent); background: var(--surface2); }
+
+.iconBtn:hover {
+  color: var(--accent);
+  background: var(--surface2);
+}
 
 .userInfo {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 12px 16px;
-  padding: 12px;
-  border-radius: 14px;
-  background: var(--surface2);
-  transition: background 0.2s ease;
+  margin: 16px 16px 8px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.dark-mode .userInfo {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(51, 65, 85, 0.5);
 }
 
 .userInfo:hover {
-  background: var(--surface3);
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
 }
 
-.userName { font-size: 14px; font-weight: 600; }
-.userStatus { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text3); }
-.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+html.dark-mode .userInfo:hover {
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.userName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.userStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text3);
+  font-weight: 500;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+}
 
 .tabs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  margin: 0 16px 10px;
-  padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface2);
+  gap: 6px;
+  margin: 10px 16px;
+  padding: 6px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+html.dark-mode .tabs {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
 .tabBtn {
@@ -161,7 +206,9 @@ html.dark-mode .scroll {
   background: transparent;
 }
 
-.section { margin-bottom: 12px; }
+.section {
+  margin-bottom: 12px;
+}
 
 .emptyState {
   padding: 14px 12px;
@@ -186,22 +233,25 @@ html.dark-mode .scroll {
   padding: 8px 6px;
 }
 
-.sectionHeader .sectionLabel { padding: 0; }
+.sectionHeader .sectionLabel {
+  padding: 0;
+}
 
 .addBtn {
   background: transparent;
   color: var(--text3);
   font-size: 18px;
-  width: 24px; 
+  width: 24px;
   height: 24px;
   border-radius: 6px;
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   justify-content: center;
   transition: all 0.15s;
 }
-.addBtn:hover { 
-  color: var(--accent); 
+
+.addBtn:hover {
+  color: var(--accent);
   background: var(--accent-dim);
 }
 
@@ -220,20 +270,22 @@ html.dark-mode .scroll {
   position: relative;
   margin-bottom: 4px;
 }
-.roomBtn:hover { 
-  background: var(--surface2); 
+
+.roomBtn:hover {
+  background: var(--surface2);
   color: var(--text);
 }
+
 .roomBtn.active {
   background: linear-gradient(135deg, var(--accent-dim), rgba(96, 165, 250, 0.08));
   color: var(--accent);
   font-weight: 600;
 }
 
-.roomName { 
-  flex: 1; 
-  overflow: hidden; 
-  text-overflow: ellipsis; 
+.roomName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -248,7 +300,8 @@ html.dark-mode .scroll {
   flex-shrink: 0;
   transition: all 0.15s;
 }
-.codeChip:hover { 
+
+.codeChip:hover {
   color: var(--accent);
   background: var(--accent-dim);
 }
@@ -259,8 +312,14 @@ html.dark-mode .scroll {
   transition: color 0.15s;
   flex-shrink: 0;
 }
-.roomBtn:hover .leaveBtn { color: var(--text3); }
-.leaveBtn:hover { color: var(--red) !important; }
+
+.roomBtn:hover .leaveBtn {
+  color: var(--text3);
+}
+
+.leaveBtn:hover {
+  color: var(--red) !important;
+}
 
 .createForm {
   padding: 12px;
@@ -281,18 +340,20 @@ html.dark-mode .scroll {
   color: var(--text2);
   cursor: pointer;
 }
-.checkLabel input { 
-  width: auto; 
+
+.checkLabel input {
+  width: auto;
   cursor: pointer;
 }
 
-.formActions { 
-  display: flex; 
-  gap: 8px; 
+.formActions {
+  display: flex;
+  gap: 8px;
   justify-content: flex-end;
 }
-.formActions .btn { 
-  padding: 8px 14px; 
+
+.formActions .btn {
+  padding: 8px 14px;
   font-size: 13px;
 }
 
@@ -305,7 +366,8 @@ html.dark-mode .scroll {
   width: 100%;
   transition: all 0.15s;
 }
-.joinLink:hover { 
+
+.joinLink:hover {
   color: var(--accent);
   background: var(--accent-dim);
 }
@@ -321,6 +383,7 @@ html.dark-mode .scroll {
   border-radius: 10px;
   transition: all 0.15s;
 }
+
 .discoverRow:hover {
   background: var(--surface2);
   color: var(--text);
@@ -335,8 +398,9 @@ html.dark-mode .scroll {
   transition: all 0.15s;
   font-weight: 600;
 }
-.joinSmall:hover { 
-  background: var(--accent); 
+
+.joinSmall:hover {
+  background: var(--accent);
   color: #f8eeee;
 }
 
@@ -355,8 +419,9 @@ html.dark-mode .scroll {
   text-decoration: none;
   cursor: pointer;
 }
-.userBtn:hover { 
-  background: var(--surface2); 
+
+.userBtn:hover {
+  background: var(--surface2);
   color: var(--text);
 }
 
@@ -369,9 +434,9 @@ html.dark-mode .scroll {
   min-width: 0;
 }
 
-.userName { 
-  overflow: hidden; 
-  text-overflow: ellipsis; 
+.userName {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
 }
@@ -442,10 +507,10 @@ html.dark-mode .scroll {
   background: var(--accent-dim);
 }
 
-.onlineDot { 
-  width: 6px; 
-  height: 6px; 
-  border-radius: 50%; 
+.onlineDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
   background: var(--green);
   flex-shrink: 0;
 }
