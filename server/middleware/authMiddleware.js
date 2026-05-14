@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const supabase = require('../db/supabase');
 
+const authUserColumns = 'id, username, email, avatar_url, bio, star_count, created_at';
+
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -13,6 +15,9 @@ const authMiddleware = async (req, res, next) => {
 
     // Guest path — no DB lookup
     if (decoded.isGuest) {
+      if (typeof decoded.userId !== 'string' || !decoded.userId.startsWith('guest_')) {
+        return res.status(401).json({ error: 'Invalid guest token' });
+      }
       req.user = {
         id: decoded.userId,
         username: decoded.username,
@@ -32,12 +37,13 @@ const authMiddleware = async (req, res, next) => {
     // Registered user path — DB lookup
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, username, email, avatar_url, bio, country, state, gender, age, star_count, created_at')
+      .select(authUserColumns)
       .eq('id', decoded.userId)
       .single();
 
     if (error || !user) return res.status(401).json({ error: 'Invalid token' });
-    req.user = user;
+    const needsProfile = user.age == null || user.country == null || !user.gender || user.gender === 'other';
+    req.user = { ...user, needsProfile };
     next();
   } catch {
     return res.status(401).json({ error: 'Token expired or invalid' });
@@ -54,6 +60,9 @@ const socketAuth = async (socket, next) => {
 
     // Guest path
     if (decoded.isGuest) {
+      if (typeof decoded.userId !== 'string' || !decoded.userId.startsWith('guest_')) {
+        return next(new Error('Invalid guest token'));
+      }
       socket.user = {
         id: decoded.userId,
         username: decoded.username,
@@ -71,12 +80,13 @@ const socketAuth = async (socket, next) => {
     // Registered user path
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, username, avatar_url, country, state, gender, age, star_count')
+      .select(authUserColumns)
       .eq('id', decoded.userId)
       .single();
 
     if (error || !user) return next(new Error('Invalid token'));
-    socket.user = user;
+    const needsProfile = user.age == null || user.country == null || !user.gender || user.gender === 'other';
+    socket.user = { ...user, needsProfile };
     next();
   } catch {
     next(new Error('Token expired'));

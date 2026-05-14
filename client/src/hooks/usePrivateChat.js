@@ -1,28 +1,45 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getSocket } from '../socket';
+import { getSocket, onSocketReset, offSocketReset } from '../socket';
 
 const MAX_MESSAGES = 200;
 
-export const usePrivateChat = () => {
+export const usePrivateChat = (currentUserId) => {
   const [conversations, setConversations] = useState({}); // { userId: [messages] }
   const [activeChat, setActiveChat] = useState(null);
 
   useEffect(() => {
-    const socket = getSocket();
-    if (!socket) return;
+    let currentSocket = getSocket();
+    if (!currentSocket) return;
 
-    const onPrivateMessage = (msg) => {
-      const key = msg.toUserId ?? msg.sender.id;
-      setConversations(prev => {
-        const existing = prev[key] || [];
-        const updated = [...existing, msg].slice(-MAX_MESSAGES);
-        return { ...prev, [key]: updated };
-      });
+    const subscribe = (socket) => {
+      const onPrivateMessage = (msg) => {
+        const key = msg.sender.id === currentUserId ? msg.toUserId : msg.sender.id;
+        setConversations(prev => {
+          const existing = prev[key] || [];
+          const updated = [...existing, msg].slice(-MAX_MESSAGES);
+          return { ...prev, [key]: updated };
+        });
+      };
+
+      socket.on('private:receive', onPrivateMessage);
+
+      return () => socket.off('private:receive', onPrivateMessage);
     };
 
-    socket.on('private:receive', onPrivateMessage);
-    return () => socket.off('private:receive', onPrivateMessage);
-  }, []);
+    let cleanup = subscribe(currentSocket);
+
+    const handleReset = (newSocket) => {
+      if (cleanup) cleanup();
+      cleanup = subscribe(newSocket);
+    };
+
+    onSocketReset(handleReset);
+
+    return () => {
+      if (cleanup) cleanup();
+      offSocketReset(handleReset);
+    };
+  }, [currentUserId]);
 
   const sendPrivateMessage = useCallback((toUserId, text) => {
     const socket = getSocket();
