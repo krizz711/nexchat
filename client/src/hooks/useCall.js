@@ -52,7 +52,7 @@ export default function useCall() {
 
     pc.onicecandidate = ({ candidate }) => {
       const socket = getSocket();
-      if (candidate && socket) socket.emit('call:ice', { to: toUserId, candidate });
+      if (candidate && socket) socket.emit('call:ice', { toUserId: toUserId, candidate });
     };
 
     pc.ontrack = (event) => {
@@ -93,7 +93,7 @@ export default function useCall() {
       await pc.setLocalDescription(offer);
 
       const socket = getSocket();
-      if (socket) socket.emit('call:offer', { to: targetUser.id, offer: pc.localDescription, callType: type });
+      if (socket) socket.emit('call:offer', { toUserId: targetUser.id, offer: pc.localDescription, callType: type });
     } catch (err) {
       console.error('startCall error', err);
       cleanup();
@@ -121,7 +121,7 @@ export default function useCall() {
       await pc.setLocalDescription(answer);
 
       const socket = getSocket();
-      if (socket) socket.emit('call:answer', { to: incomingCall.fromUserId, answer: pc.localDescription });
+      if (socket) socket.emit('call:answer', { toUserId: incomingCall.fromUserId, answer: pc.localDescription });
 
       setIncomingCall(null);
       setCallState('connected');
@@ -136,7 +136,7 @@ export default function useCall() {
     if (!incomingCall) return;
     const socket = getSocket();
     try {
-      if (socket) socket.emit('call:decline', { to: incomingCall.fromUserId });
+      if (socket) socket.emit('call:decline', { toUserId: incomingCall.fromUserId });
     } catch (err) { console.error('decline emit error', err); }
     setIncomingCall(null);
     setCallState('idle');
@@ -145,7 +145,7 @@ export default function useCall() {
   const endCall = () => {
     try {
       const socket = getSocket();
-      if (remoteUser && socket) socket.emit('call:end', { to: remoteUser.id });
+      if (remoteUser && socket) socket.emit('call:end', { toUserId: remoteUser.id });
     } catch (err) { console.error('endCall emit error', err); }
     cleanup();
     setCallState('idle');
