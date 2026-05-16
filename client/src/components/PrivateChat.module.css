@@ -20,8 +20,8 @@ html.dark-mode .panel {
 }
 
 .header {
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   padding: 12px 14px;
   border-bottom: 1px solid var(--surface3);
@@ -34,11 +34,11 @@ html.dark-mode .header {
   background: rgba(33, 37, 41, 0.8);
 }
 
-.userInfo { 
-  display: flex; 
-  align-items: center; 
-  gap: 8px; 
-  font-size: 13px; 
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -87,7 +87,8 @@ html.dark-mode .starred {
   clip-path: polygon(50% 0%, 61% 34%, 98% 34%, 68% 55%, 79% 90%, 50% 68%, 21% 90%, 32% 55%, 2% 34%, 39% 34%);
 }
 
-.iconBtn, .closeBtn {
+.iconBtn,
+.closeBtn {
   background: transparent;
   color: var(--text3);
   padding: 6px 8px;
@@ -96,12 +97,14 @@ html.dark-mode .starred {
   transition: all 0.15s;
   cursor: pointer;
 }
-.iconBtn:hover { 
-  color: var(--accent); 
+
+.iconBtn:hover {
+  color: var(--accent);
   background: var(--surface2);
 }
-.closeBtn:hover { 
-  color: var(--red); 
+
+.closeBtn:hover {
+  color: var(--red);
   background: rgba(186, 26, 26, 0.1);
 }
 
@@ -122,13 +125,14 @@ html.dark-mode .starred {
   padding: 24px;
 }
 
-.msgRow { 
-  display: flex; 
-  flex-direction: column; 
+.msgRow {
+  display: flex;
+  flex-direction: column;
   gap: 2px;
   animation: fadeIn 0.2s ease-out;
 }
-.mine { 
+
+.mine {
   align-items: flex-end;
 }
 
@@ -141,14 +145,16 @@ html.dark-mode .starred {
   line-height: 1.45;
   transition: all 0.2s ease;
 }
-.bubbleOther { 
-  background: var(--surface); 
-  color: var(--text); 
+
+.bubbleOther {
+  background: var(--surface);
+  color: var(--text);
   border-bottom-left-radius: 3px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
 }
+
 html.dark-mode .bubbleOther {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .bubbleMine {
@@ -158,43 +164,45 @@ html.dark-mode .bubbleOther {
   border-bottom-right-radius: 3px;
 }
 
-.time { 
-  font-size: 10px; 
-  color: var(--text3); 
+.time {
+  font-size: 10px;
+  color: var(--text3);
   padding: 0 3px;
 }
 
-.img { 
-  max-width: 180px; 
-  border-radius: 8px; 
+.img {
+  max-width: 180px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
+
 .img:hover {
   opacity: 0.9;
   transform: scale(1.02);
 }
 
-.file { 
-  display: flex; 
-  gap: 6px; 
-  align-items: center; 
+.file {
+  display: flex;
+  gap: 6px;
+  align-items: center;
   font-size: 12px;
 }
-.file a { 
+
+.file a {
   color: inherit;
 }
 
-.uploading { 
-  font-size: 11px; 
-  color: var(--text3); 
-  text-align: center; 
+.uploading {
+  font-size: 11px;
+  color: var(--text3);
+  text-align: center;
   padding: 6px;
 }
 
 .inputArea {
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   gap: 6px;
   padding: 10px 12px;
   border-top: 1px solid var(--border);
@@ -215,7 +223,8 @@ html.dark-mode .inputArea {
   transition: all 0.15s;
   cursor: pointer;
 }
-.attachBtn:hover { 
+
+.attachBtn:hover {
   color: var(--accent);
   background: var(--surface2);
 }
@@ -231,8 +240,9 @@ html.dark-mode .inputArea {
   font-family: var(--font);
   transition: all 0.2s ease;
 }
-.input:focus { 
-  border-color: var(--accent); 
+
+.input:focus {
+  border-color: var(--accent);
   outline: none;
   background: var(--surface);
 }
@@ -249,12 +259,14 @@ html.dark-mode .inputArea {
   transition: all 0.15s;
   cursor: pointer;
 }
-.sendBtn:hover:not(:disabled) { 
+
+.sendBtn:hover:not(:disabled) {
   background: var(--accent-hover);
   transform: scale(1.05);
 }
-.sendBtn:disabled { 
-  opacity: 0.4; 
+
+.sendBtn:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -303,4 +315,15 @@ html.dark-mode .inputArea {
     height: 32px;
     font-size: 12px;
   }
+}
+
+/* Full screen modifier when PrivateChat is used as the mobile full-screen view */
+.fullScreen {
+  width: 100vw !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  border-radius: 0 !important;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
 }
