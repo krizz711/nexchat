@@ -5,7 +5,7 @@ import { downloadChatTxt, downloadFile } from '../utils/download';
 import { format } from 'date-fns';
 import styles from './PrivateChat.module.css';
 
-export default function PrivateChat({ targetUser, messages, onSend, onSendFile, onClose, onStarUser, starringUserId, onViewProfile }) {
+export default function PrivateChat({ targetUser, messages, onSend, onSendFile, onClose, onStarUser, starringUserId, onViewProfile, fullScreen = false }) {
   const { user } = useAuth();
   const [text, setText] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -40,7 +40,7 @@ export default function PrivateChat({ targetUser, messages, onSend, onSendFile, 
   const isImage = (type) => type?.startsWith('image/');
 
   return (
-    <div className={styles.panel}>
+    <div className={`${styles.panel} ${fullScreen ? styles.fullScreen : ''}`}>
       <div className={styles.header}>
         <div className={styles.userInfo}>
           <div className="avatar" style={{ width: 30, height: 30, fontSize: 11 }}>

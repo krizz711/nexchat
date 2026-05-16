@@ -11,7 +11,7 @@ import Profile from './pages/Profile';
 function initializeTheme() {
   const savedTheme = localStorage.getItem('nexchat-theme');
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  
+
   if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
     document.documentElement.classList.add('dark-mode');
   } else {
@@ -24,7 +24,7 @@ initializeTheme();
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return (
-    <div style={{ height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text2)' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text2)' }}>
       Connecting...
     </div>
   );
@@ -51,7 +51,7 @@ export default function App() {
         }
       }
     };
-    
+
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);

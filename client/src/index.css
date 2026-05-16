@@ -86,7 +86,7 @@ html.dark-mode {
 html,
 body,
 #root {
-  height: 100%;
+  min-height: 100dvh;
   width: 100%;
   font-family: var(--font);
   background: var(--bg);

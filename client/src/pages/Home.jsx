@@ -13,6 +13,8 @@ export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeRoom, setActiveRoom] = useState(null);
+  const [mobileView, setMobileView] = useState('list'); // 'list' | 'room' | 'dm'
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 900 : false);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [starringUserId, setStarringUserId] = useState('');
   const { activeChat, openChat, closeChat, getMessages, sendPrivateMessage, sendPrivateFile } = usePrivateChat(user.id);
@@ -55,9 +57,23 @@ export default function Home() {
     };
   }, [user.id]);
 
+  // media query fallback for mobile detection
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 900);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   const handleUserClick = (u) => {
     setPrivateChatUser(u);
     openChat(u.id);
+    if (isMobile) setMobileView('dm');
+  };
+
+  const handleRoomSelect = (room) => {
+    setActiveRoom(room);
+    if (isMobile) setMobileView('room');
   };
 
   const handleViewProfile = (u) => {
@@ -90,43 +106,93 @@ export default function Home() {
 
   return (
     <div className={styles.layout}>
-      <Sidebar
-        activeRoom={activeRoom}
-        onRoomSelect={setActiveRoom}
-        onlineUsers={onlineUsers}
-        onUserClick={handleUserClick}
-        onUserStar={handleUserStar}
-        starringUserId={starringUserId}
-      />
-
-      <main className={styles.main}>
-        {activeRoom ? (
-          <ChatRoom key={activeRoom.id} room={activeRoom} onUserClick={handleUserClick} />
+      {/* Mobile: show only list or full-screen chat views */}
+      {isMobile ? (
+        mobileView === 'list' ? (
+          <Sidebar
+            activeRoom={activeRoom}
+            onRoomSelect={handleRoomSelect}
+            onlineUsers={onlineUsers}
+            onUserClick={handleUserClick}
+            onUserStar={handleUserStar}
+            starringUserId={starringUserId}
+          />
+        ) : mobileView === 'room' ? (
+          <div className={styles.mobileChatView}>
+            <div className={styles.mobileBackBar}>
+              <button onClick={() => { setMobileView('list'); setActiveRoom(null); }}>&larr; Back</button>
+              <div style={{ fontWeight: 700 }}>{activeRoom?.name || 'Room'}</div>
+            </div>
+            {activeRoom && (
+              <div style={{ flex: 1, overflow: 'hidden' }}>
+                <ChatRoom key={activeRoom.id} room={activeRoom} onUserClick={handleUserClick} />
+              </div>
+            )}
+          </div>
         ) : (
-          <div className={styles.welcome}>
-            <div className={styles.welcomeInner}>
-              <div className={styles.welcomeLogo}>NexChat</div>
-              <p>Select a room from the sidebar to start chatting.</p>
-              <p className={styles.hint}>Messages are not stored — they live only while you're connected.</p>
+          <div className={styles.mobileChatView}>
+            <div className={styles.mobileBackBar}>
+              <button onClick={() => { setMobileView('list'); closeChat(); setPrivateChatUser(null); }}>&larr; Back</button>
+              <div style={{ fontWeight: 700 }}>{privateChatUser?.username || 'Direct Message'}</div>
+            </div>
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              {activeChat && privateChatUser && (
+                <PrivateChat
+                  targetUser={privateChatUser}
+                  messages={getMessages(activeChat)}
+                  onSend={(text) => sendPrivateMessage(activeChat, text)}
+                  onSendFile={(url, name, type) => sendPrivateFile(activeChat, url, name, type)}
+                  onClose={() => { closeChat(); setPrivateChatUser(null); setMobileView('list'); }}
+                  onStarUser={handleUserStar}
+                  starringUserId={starringUserId}
+                  onViewProfile={handleViewProfile}
+                  fullScreen={true}
+                />
+              )}
             </div>
           </div>
-        )}
-      </main>
-
-      {/* Private chat popup */}
-      {activeChat && privateChatUser && (
-        <div className={styles.privateWrap}>
-          <PrivateChat
-            targetUser={privateChatUser}
-            messages={getMessages(activeChat)}
-            onSend={(text) => sendPrivateMessage(activeChat, text)}
-            onSendFile={(url, name, type) => sendPrivateFile(activeChat, url, name, type)}
-            onClose={closeChat}
-            onStarUser={handleUserStar}
+        )
+      ) : (
+        <>
+          <Sidebar
+            activeRoom={activeRoom}
+            onRoomSelect={handleRoomSelect}
+            onlineUsers={onlineUsers}
+            onUserClick={handleUserClick}
+            onUserStar={handleUserStar}
             starringUserId={starringUserId}
-            onViewProfile={handleViewProfile}
           />
-        </div>
+
+          <main className={styles.main}>
+            {activeRoom ? (
+              <ChatRoom key={activeRoom.id} room={activeRoom} onUserClick={handleUserClick} />
+            ) : (
+              <div className={styles.welcome}>
+                <div className={styles.welcomeInner}>
+                  <div className={styles.welcomeLogo}>NexChat</div>
+                  <p>Select a room from the sidebar to start chatting.</p>
+                  <p className={styles.hint}>Messages are not stored — they live only while you're connected.</p>
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* Private chat popup (desktop) */}
+          {activeChat && privateChatUser && (
+            <div className={styles.privateWrap}>
+              <PrivateChat
+                targetUser={privateChatUser}
+                messages={getMessages(activeChat)}
+                onSend={(text) => sendPrivateMessage(activeChat, text)}
+                onSendFile={(url, name, type) => sendPrivateFile(activeChat, url, name, type)}
+                onClose={closeChat}
+                onStarUser={handleUserStar}
+                starringUserId={starringUserId}
+                onViewProfile={handleViewProfile}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

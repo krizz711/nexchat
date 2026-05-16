@@ -6,7 +6,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: transparent;
 }
@@ -561,8 +561,8 @@ html.dark-mode .inputArea {
 /* ═══ MOBILE ═══ */
 @media (max-width: 900px) {
   .room {
-    height: auto;
-    min-height: 55dvh;
+    height: 100dvh;
+    min-height: 100dvh;
   }
 
   .header {
