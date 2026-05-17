@@ -625,3 +625,5 @@ module.exports = (io) => {
     });
   });
 };
+
+module.exports.getActiveUser = getActiveUser;

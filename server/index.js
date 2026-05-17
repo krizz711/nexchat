@@ -60,7 +60,7 @@ app.use('/api/', limiter);
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/groups', require('./routes/groups'));
 app.use('/api/upload', require('./routes/upload'));
-app.use('/api/friends', require('./routes/friends'));
+app.use('/api/friends', require('./routes/friends')(io));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
 

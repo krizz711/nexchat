@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getSocket } from '../socket';
 import {
   fetchGroups,
   createGroup,
@@ -36,6 +37,21 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
   const [userSort, setUserSort] = useState('popularity');
   useEffect(() => { loadGroups(); loadFriends(); }, []);
   useEffect(() => { if (activePanel === 'friends') loadFriends(); }, [activePanel]);
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const onFriendRequest = ({ request }) => {
+      setFriendRequests(prev => {
+        const exists = prev.find(r => r.id === request.id);
+        if (exists) return prev;
+        return [request, ...prev];
+      });
+    };
+
+    socket.on('friend:request', onFriendRequest);
+    return () => socket.off('friend:request', onFriendRequest);
+  }, []);
 
 
   const loadGroups = async () => {

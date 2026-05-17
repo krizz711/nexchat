@@ -153,8 +153,6 @@ export default function useCall() {
   };
 
   useEffect(() => {
-    let socket = getSocket();
-
     const handleIncoming = (data) => {
       setIncomingCall(data);
       setCallState('incoming');
@@ -192,37 +190,36 @@ export default function useCall() {
       }, 3000);
     };
 
-    const bind = (s) => {
-      if (!s) return;
-      s.on('call:incoming', handleIncoming);
-      s.on('call:answered', handleAnswered);
-      s.on('call:ice', handleIce);
-      s.on('call:declined', handleDeclined);
-      s.on('call:ended', handleEnded);
+    const bind = (socket) => {
+      if (!socket) return () => {};
+      socket.on('call:incoming', handleIncoming);
+      socket.on('call:answered', handleAnswered);
+      socket.on('call:ice', handleIce);
+      socket.on('call:declined', handleDeclined);
+      socket.on('call:ended', handleEnded);
+      return () => {
+        socket.off('call:incoming', handleIncoming);
+        socket.off('call:answered', handleAnswered);
+        socket.off('call:ice', handleIce);
+        socket.off('call:declined', handleDeclined);
+        socket.off('call:ended', handleEnded);
+      };
     };
 
-    const unbind = (s) => {
-      if (!s) return;
-      s.off('call:incoming', handleIncoming);
-      s.off('call:answered', handleAnswered);
-      s.off('call:ice', handleIce);
-      s.off('call:declined', handleDeclined);
-      s.off('call:ended', handleEnded);
+    let currentSocket = getSocket();
+    let unbind = bind(currentSocket);
+
+    const handleReset = (newSocket) => {
+      unbind();
+      currentSocket = newSocket;
+      unbind = bind(newSocket);
     };
 
-    bind(socket);
-
-    const resetHandler = (newSocket) => {
-      unbind(socket);
-      socket = newSocket;
-      bind(socket);
-    };
-
-    onSocketReset(resetHandler);
+    onSocketReset(handleReset);
 
     return () => {
-      unbind(socket);
-      offSocketReset(resetHandler);
+      unbind();
+      offSocketReset(handleReset);
     };
   }, []);
 
