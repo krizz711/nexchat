@@ -357,6 +357,25 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
         {activePanel === 'active' && (
           <div className={styles.section}>
             <div className={styles.sectionLabel}>Active Users - {onlineUsers?.length || 0}</div>
+            <a
+              href="https://go.nordvpn.net/YOUR_AFFILIATE_LINK"
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              style={{
+                display: 'block',
+                padding: '10px 12px',
+                marginBottom: 8,
+                borderRadius: 10,
+                border: '1px solid var(--border)',
+                background: 'var(--surface2)',
+                fontSize: 12,
+                color: 'var(--text2)',
+                textDecoration: 'none',
+              }}
+            >
+              <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text3)', display: 'block', marginBottom: 2 }}>Sponsored</span>
+              Stay private while chatting — NordVPN
+            </a>
             <div className={styles.userFilters}>
               <input
                 value={userSearch}

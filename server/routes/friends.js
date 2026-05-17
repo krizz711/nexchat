@@ -37,6 +37,7 @@ const acceptRequest = async (requestId, acceptorId, requesterId, res) => {
 // GET / => Query friendships table joining users on both user_a_id and user_b_id.
 router.get('/', async (req, res) => {
     try {
+        // Use explicit join syntax on the FK columns to avoid depending on auto-named foreign key aliases
         const { data: friendships, error } = await supabase
             .from('friendships')
             .select(`
@@ -44,8 +45,8 @@ router.get('/', async (req, res) => {
         friends_since,
         user_a_id,
         user_b_id,
-        user_a:users!friendships_user_a_id_fkey (id, username, avatar_url, bio, star_count, country, state, gender, age, calls_enabled),
-        user_b:users!friendships_user_b_id_fkey (id, username, avatar_url, bio, star_count, country, state, gender, age, calls_enabled)
+        user_a:user_a_id (id, username, avatar_url, bio, star_count, country, state, gender, age, calls_enabled),
+        user_b:user_b_id (id, username, avatar_url, bio, star_count, country, state, gender, age, calls_enabled)
       `)
             .or(`user_a_id.eq.${req.user.id},user_b_id.eq.${req.user.id}`);
 

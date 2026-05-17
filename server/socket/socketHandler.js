@@ -193,12 +193,15 @@ const insertRoomMessage = async (payload) => {
   return fallback.error;
 };
 
-const buildPrivateMessage = ({ fromUser, toUserId, text = '', fileUrl = null, fileName = null, fileType = null }) => ({
+const buildPrivateMessage = ({ fromUser, toUserId, text = '', fileUrl = null, fileName = null, fileType = null, ciphertext = null, nonce = null, encrypted = false }) => ({
   id: uuidv4(),
-  text,
+  text: encrypted ? '' : text,
   fileUrl,
   fileName,
   fileType,
+  ciphertext: ciphertext || null,
+  nonce: nonce || null,
+  encrypted: !!encrypted,
   sender: buildSender(fromUser),
   toUserId,
   timestamp: new Date().toISOString(),
@@ -208,6 +211,9 @@ const buildPrivateMessage = ({ fromUser, toUserId, text = '', fileUrl = null, fi
 const mapPrivateMessage = (row) => ({
   id: row.id,
   text: row.text || '',
+  ciphertext: row.ciphertext || null,
+  nonce: row.nonce || null,
+  encrypted: row.encrypted || false,
   fileUrl: row.file_url || null,
   fileName: row.file_name || null,
   fileType: row.file_type || null,
@@ -226,6 +232,9 @@ const storePrivateMessage = async (message, recipient) => {
       sender_snapshot: message.sender,
       recipient_snapshot: recipient || { id: message.toUserId },
       text: message.text || '',
+      ciphertext: message.ciphertext || null,
+      nonce: message.nonce || null,
+      encrypted: message.encrypted || false,
       file_url: message.fileUrl || null,
       file_name: message.fileName || null,
       file_type: message.fileType || null,
@@ -424,16 +433,23 @@ const handler = (io) => {
       }
     });
 
-    socket.on('private:send', async ({ toUserId, text, fileUrl, fileName, fileType }) => {
-      if (!toUserId || (!text && !fileUrl)) return;
+    socket.on('private:send', async ({ toUserId, text, fileUrl, fileName, fileType, ciphertext, nonce, encrypted }) => {
+      // Accept either plaintext text OR ciphertext payload. Do not touch ciphertext.
+      if (!toUserId || (!text && !fileUrl && !ciphertext)) return;
+
+      const isEncrypted = !!encrypted && !!ciphertext;
+      const safeText = isEncrypted ? '' : (text ? filterMessage(sanitize(text)) : '');
 
       const message = buildPrivateMessage({
         fromUser: user,
         toUserId,
-        text: text ? filterMessage(sanitize(text)) : '',
+        text: safeText,
         fileUrl: fileUrl || null,
         fileName: fileName ? sanitize(fileName) : null,
         fileType: fileType || null,
+        ciphertext: ciphertext || null,
+        nonce: nonce || null,
+        encrypted: isEncrypted,
       });
 
       const activeRecipient = getActiveUser(toUserId);
