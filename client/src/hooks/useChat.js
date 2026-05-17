@@ -114,7 +114,7 @@ export const useChat = (roomId) => {
 
     socket.emit('message:send', { roomId, text: trimmed, replyTo });
     sendTypingStop();
-  }, [roomId, currentUser]);
+  }, [roomId, currentUser, sendTypingStop]);
 
   const sendFile = useCallback((fileUrl, fileName, fileType, fileSize) => {
     const socket = getSocket();

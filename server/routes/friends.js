@@ -51,29 +51,7 @@ router.get('/', async (req, res) => {
             .or(`user_a_id.eq.${req.user.id},user_b_id.eq.${req.user.id}`);
 
         if (error) {
-            const { data: fallbackFriendships, error: fallbackError } = await supabase
-                .from('friendships')
-                .select(`
-          id,
-          friends_since,
-          user_a_id,
-          user_b_id,
-          user_a:user_a_id (id, username, avatar_url, bio, star_count, country, state, gender, age, calls_enabled),
-          user_b:user_b_id (id, username, avatar_url, bio, star_count, country, state, gender, age, calls_enabled)
-        `)
-                .or(`user_a_id.eq.${req.user.id},user_b_id.eq.${req.user.id}`);
-
-            if (fallbackError) return res.status(500).json({ error: 'Database query failed' });
-
-            const friendsListInfo = fallbackFriendships.map(f => {
-                const friendData = f.user_a_id === req.user.id ? f.user_b : f.user_a;
-                return {
-                    ...friendData,
-                    friendship_id: f.id,
-                    friends_since: f.friends_since,
-                };
-            });
-            return res.json(friendsListInfo);
+            return res.status(500).json({ error: 'Database query failed' });
         }
 
         const friendsList = friendships.map(f => {
@@ -222,7 +200,8 @@ router.post('/decline/:requestId', async (req, res) => {
             .from('friend_requests')
             .update({ status: 'declined' })
             .eq('id', requestId)
-            .eq('to_user_id', req.user.id);
+            .eq('to_user_id', req.user.id)
+            .eq('status', 'pending');
 
         if (error) return res.status(500).json({ error: 'Failed to decline request' });
 

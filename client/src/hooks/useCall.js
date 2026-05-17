@@ -5,7 +5,12 @@ const ICE_SERVERS = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-  ],
+    {
+      urls: import.meta.env.VITE_TURN_URL,
+      username: import.meta.env.VITE_TURN_USER,
+      credential: import.meta.env.VITE_TURN_CRED,
+    },
+  ].filter(s => s.urls && s.urls !== 'undefined'),
 };
 
 export default function useCall(user) {
@@ -31,7 +36,7 @@ export default function useCall(user) {
 
     try {
       if (pcRef.current) {
-        try { pcRef.current.close(); } catch (e) {}
+        try { pcRef.current.close(); } catch (e) { }
         pcRef.current = null;
       }
     } catch (err) {
@@ -192,7 +197,7 @@ export default function useCall(user) {
     };
 
     const bind = (socket) => {
-      if (!socket) return () => {};
+      if (!socket) return () => { };
       socket.on('call:incoming', handleIncoming);
       socket.on('call:answered', handleAnswered);
       socket.on('call:ice', handleIce);

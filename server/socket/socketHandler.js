@@ -414,8 +414,7 @@ const handler = (io) => {
         const { data, error } = await supabase
           .from('private_messages')
           .select('*')
-          .in('sender_key', [user.id, withUserId])
-          .in('recipient_key', [user.id, withUserId])
+          .or(`and(sender_key.eq.${user.id},recipient_key.eq.${withUserId}),and(sender_key.eq.${withUserId},recipient_key.eq.${user.id})`)
           .order('created_at', { ascending: false })
           .limit(100);
 
@@ -460,8 +459,9 @@ const handler = (io) => {
       socket.emit('private:receive', message);
 
       if (activeRecipient?.socketIds?.size) {
-        activeRecipient.socketIds.forEach(socketId => {
-          const recipientSocket = io.sockets.sockets.get(socketId);
+        activeRecipient.socketIds.forEach(sid => {
+          if (sid === socket.id) return; // skip sender's own socket to avoid duplicate
+          const recipientSocket = io.sockets.sockets.get(sid);
           if (recipientSocket) recipientSocket.emit('private:receive', message);
         });
         return;
@@ -632,8 +632,7 @@ const handler = (io) => {
 
       // Cleanup typing
       typingTimeouts.forEach((timeout, key) => {
-        const [userKey] = key.split(':');
-        if (userKey === user.id) {
+        if (key.startsWith(user.id + ':')) {
           clearTimeout(timeout);
           typingTimeouts.delete(key);
         }
