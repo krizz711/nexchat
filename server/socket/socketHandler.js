@@ -238,7 +238,7 @@ const storePrivateMessage = async (message, recipient) => {
   }
 };
 
-module.exports = (io) => {
+const handler = (io) => {
   // Track typing timeouts
   const typingTimeouts = new Map();
 
@@ -626,4 +626,5 @@ module.exports = (io) => {
   });
 };
 
+module.exports = handler;
 module.exports.getActiveUser = getActiveUser;

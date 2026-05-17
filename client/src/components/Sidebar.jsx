@@ -65,9 +65,9 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
     if (user?.isGuest) return;
     setFriendsLoading(true);
     try {
-      const [{ friends: f }, { requests: r }] = await Promise.all([fetchFriends(), fetchFriendRequests()]);
-      setFriends(f || []);
-      setFriendRequests(r || []);
+      const [friends, requests] = await Promise.all([fetchFriends(), fetchFriendRequests()]);
+      setFriends(friends || []);
+      setFriendRequests(requests || []);
     } catch { }
     finally { setFriendsLoading(false); }
   };

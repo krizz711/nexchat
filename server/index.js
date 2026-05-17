@@ -76,7 +76,10 @@ httpServer.listen(PORT, '0.0.0.0', () => {
 
 setInterval(async () => {
   try {
-    const { error } = await supabase.rpc('delete_expired_private_messages');
+    const { error } = await supabase
+      .from('private_messages')
+      .delete()
+      .lt('expires_at', new Date().toISOString());
     if (error) console.error('[cleanup] DM cleanup failed:', error.message);
     else console.log('[cleanup] Expired DMs purged');
   } catch (err) {

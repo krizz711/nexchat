@@ -8,7 +8,7 @@ const ICE_SERVERS = {
   ],
 };
 
-export default function useCall() {
+export default function useCall(user) {
   const [callState, setCallState] = useState('idle');
   const [callType, setCallType] = useState('voice');
   const [remoteUser, setRemoteUser] = useState(null);
@@ -76,6 +76,7 @@ export default function useCall() {
   };
 
   const startCall = async (targetUser, type = 'voice') => {
+    if (user?.isGuest || callState !== 'idle') return;
     setCallType(type);
     setRemoteUser(targetUser);
     setCallState('calling');
