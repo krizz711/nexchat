@@ -17,7 +17,7 @@ import {
 } from '../utils/api';
 import styles from './Sidebar.module.css';
 
-export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserClick, onCallUser, onUserStar, starringUserId }) {
+export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserClick, onCallUser, onUserStar, starringUserId, activePanel, onSetActivePanel }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [groups, setGroups] = useState({ globalGroups: [], userGroups: [], publicGroups: [] });
@@ -28,7 +28,6 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
   const [inviteCode, setInviteCode] = useState('');
   const [copiedCode, setCopiedCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [activePanel, setActivePanel] = useState('active');
   const [friends, setFriends] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
   const [pendingOutgoing, setPendingOutgoing] = useState([]);
@@ -87,9 +86,11 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
     e.stopPropagation();
     try {
       await sendFriendRequest(userId);
-      alert('Request sent');
-      setPendingOutgoing(prev => prev.includes(userId) ? prev : [...prev, userId]);
-    } catch { }
+      setPendingOutgoing(prev => [...prev, userId]);
+    } catch (err) {
+      const msg = err?.response?.data?.error || 'Failed to send request';
+      alert(msg);
+    }
   };
 
   const handleCreate = async () => {
@@ -197,15 +198,15 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
       </div>
 
       <div className={styles.tabs}>
-        <button className={`${styles.tabBtn} ${activePanel === 'rooms' ? styles.tabActive : ''}`} onClick={() => setActivePanel('rooms')}>
-          Rooms
-        </button>
-        <button className={`${styles.tabBtn} ${activePanel === 'active' ? styles.tabActive : ''}`} onClick={() => setActivePanel('active')}>
+        <button className={`${styles.tabBtn} ${activePanel === 'active' ? styles.tabActive : ''}`} onClick={() => onSetActivePanel('active')}>
           Active
+        </button>
+        <button className={`${styles.tabBtn} ${activePanel === 'rooms' ? styles.tabActive : ''}`} onClick={() => onSetActivePanel('rooms')}>
+          Rooms
         </button>
         <button
           className={`${styles.tabBtn} ${activePanel === 'friends' ? styles.tabActive : ''}`}
-          onClick={() => { setActivePanel('friends'); setRequestCount(0); }}
+          onClick={() => { onSetActivePanel('friends'); setRequestCount(0); }}
         >
           Friends
           {requestCount > 0 && (
@@ -443,31 +444,18 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
                   <div className={styles.userMeta}>
                     {u.id !== user?.id && (
                       friends.some(f => f.id === u.id) ? (
-                        <button
-                          className={styles.profileSmall}
-                          type="button"
-                          disabled
-                          style={{ color: 'var(--green)', opacity: 1 }}
-                          title="Already friends"
-                        >
-                          Friend
+                        <button className={styles.profileSmall} disabled style={{ color: 'var(--green)' }}>
+                          Friends
                         </button>
                       ) : pendingOutgoing.includes(u.id) ? (
-                        <button
-                          className={styles.profileSmall}
-                          type="button"
-                          disabled
-                          title="Friend request pending"
-                        >
+                        <button className={styles.profileSmall} disabled>
                           Pending
                         </button>
                       ) : (
                         <button
                           className={styles.profileSmall}
-                          type="button"
                           onClick={(e) => handleSendFriendRequest(u.id, e)}
                           disabled={u.id?.startsWith('guest_')}
-                          title={u.id?.startsWith('guest_') ? 'Guest users cannot receive friend requests' : `Send friend request to ${u.username}`}
                         >
                           Add friend
                         </button>
