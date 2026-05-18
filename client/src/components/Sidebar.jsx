@@ -31,12 +31,13 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
   const [activePanel, setActivePanel] = useState('active');
   const [friends, setFriends] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
+  const [pendingOutgoing, setPendingOutgoing] = useState([]);
   const [requestCount, setRequestCount] = useState(0);
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [userSearch, setUserSearch] = useState('');
   const [genderFilter, setGenderFilter] = useState('all');
   const [userSort, setUserSort] = useState('popularity');
-  useEffect(() => { loadGroups(); loadFriends(); }, []);
+  useEffect(() => { loadGroups(); loadFriends(); }, [user]);
   useEffect(() => { if (activePanel === 'friends') loadFriends(); }, [activePanel]);
   useEffect(() => {
     const socket = getSocket();
@@ -87,6 +88,7 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
     try {
       await sendFriendRequest(userId);
       alert('Request sent');
+      setPendingOutgoing(prev => prev.includes(userId) ? prev : [...prev, userId]);
     } catch { }
   };
 
@@ -440,15 +442,36 @@ export default function Sidebar({ activeRoom, onRoomSelect, onlineUsers, onUserC
                   <span className={styles.userName}>{u.username}</span>
                   <div className={styles.userMeta}>
                     {u.id !== user?.id && (
-                      <button
-                        className={styles.profileSmall}
-                        type="button"
-                        onClick={(e) => handleSendFriendRequest(u.id, e)}
-                        disabled={u.id?.startsWith('guest_')}
-                        title={u.id?.startsWith('guest_') ? 'Guest users cannot receive friend requests' : `Send friend request to ${u.username}`}
-                      >
-                        Add friend
-                      </button>
+                      friends.some(f => f.id === u.id) ? (
+                        <button
+                          className={styles.profileSmall}
+                          type="button"
+                          disabled
+                          style={{ color: 'var(--green)', opacity: 1 }}
+                          title="Already friends"
+                        >
+                          Friend
+                        </button>
+                      ) : pendingOutgoing.includes(u.id) ? (
+                        <button
+                          className={styles.profileSmall}
+                          type="button"
+                          disabled
+                          title="Friend request pending"
+                        >
+                          Pending
+                        </button>
+                      ) : (
+                        <button
+                          className={styles.profileSmall}
+                          type="button"
+                          onClick={(e) => handleSendFriendRequest(u.id, e)}
+                          disabled={u.id?.startsWith('guest_')}
+                          title={u.id?.startsWith('guest_') ? 'Guest users cannot receive friend requests' : `Send friend request to ${u.username}`}
+                        >
+                          Add friend
+                        </button>
+                      )
                     )}
                     {u.id !== user?.id && (
                       <button

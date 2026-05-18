@@ -37,27 +37,38 @@ const acceptRequest = async (requestId, acceptorId, requesterId, res) => {
 // GET / => Query friendships table joining users on both user_a_id and user_b_id.
 router.get('/', async (req, res) => {
     try {
-        // Use explicit join syntax on the FK columns to avoid depending on auto-named foreign key aliases
         const { data: friendships, error } = await supabase
             .from('friendships')
             .select(`
         id,
         friends_since,
         user_a_id,
-        user_b_id,
-        user_a:user_a_id (id, username, avatar_url, bio, star_count, country, state, gender, age, calls_enabled),
-        user_b:user_b_id (id, username, avatar_url, bio, star_count, country, state, gender, age, calls_enabled)
+        user_b_id
       `)
             .or(`user_a_id.eq.${req.user.id},user_b_id.eq.${req.user.id}`);
 
         if (error) {
-            return res.status(500).json({ error: 'Database query failed' });
+            console.error('friendships query error:', JSON.stringify(error));
+            return res.status(500).json({ error: 'Database query failed', detail: error.message });
         }
 
+        // Fetch friend user data separately to avoid FK alias issues
+        const friendIds = friendships.map(f =>
+            f.user_a_id === req.user.id ? f.user_b_id : f.user_a_id
+        );
+
+        const { data: friendUsers } = friendIds.length ? await supabase
+            .from('users')
+            .select('id, username, avatar_url, bio, star_count, country, state, gender, age, calls_enabled')
+            .in('id', friendIds) : { data: [] };
+
+        const userMap = {};
+        (friendUsers || []).forEach(u => { userMap[u.id] = u; });
+
         const friendsList = friendships.map(f => {
-            const friendData = f.user_a_id === req.user.id ? f.user_b : f.user_a;
+            const friendId = f.user_a_id === req.user.id ? f.user_b_id : f.user_a_id;
             return {
-                ...friendData,
+                ...(userMap[friendId] || { id: friendId }),
                 friendship_id: f.id,
                 friends_since: f.friends_since,
             };
@@ -134,7 +145,14 @@ router.post('/request/:userId', async (req, res) => {
             .select()
             .single();
 
-        if (insertError) return res.status(500).json({ error: 'Failed to send friend request' });
+        if (insertError) {
+            console.error('friend_requests insert error:', JSON.stringify(insertError));
+            // 23505 = unique_violation — request already exists
+            if (insertError.code === '23505') {
+                return res.status(409).json({ error: 'Friend request already sent' });
+            }
+            return res.status(500).json({ error: 'Failed to send friend request', detail: insertError.message, code: insertError.code });
+        }
 
         try {
             const { data: senderInfo } = await supabase
